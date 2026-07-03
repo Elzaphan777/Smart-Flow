@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { User, Mail, Lock, Calendar, Shield, Eye, EyeOff, Check, X, AlertTriangle } from 'lucide-react';
+import { User, Mail, Lock, Calendar, Shield, Eye, EyeOff, Check, X, AlertTriangle, Building, CreditCard } from 'lucide-react';
+
+const GH_BANKS = [
+  'GCB Bank',
+  'Ecobank Ghana',
+  'Stanbic Bank',
+  'Absa Bank Ghana',
+  'Fidelity Bank Ghana',
+  'CalBank',
+  'Zenith Bank Ghana'
+];
 
 export default function AuthView() {
   const { loginUser, registerUser } = useApp();
@@ -17,7 +27,9 @@ export default function AuthView() {
     password: '',
     dob: '',
     role: 'customer',
-    staffId: ''
+    staffId: '',
+    bank: GH_BANKS[0],
+    accountNumber: ''
   });
 
   // Password regulations state
@@ -119,6 +131,16 @@ export default function AuthView() {
       if (!validateAge(formData.dob)) {
         setError('Age Requirement Error: You must be at least 18 years old to register.');
         return;
+      }
+      if (formData.role === 'customer') {
+        if (!formData.accountNumber.trim()) {
+          setError('Account Number is required.');
+          return;
+        }
+        if (formData.accountNumber.trim().length < 6) {
+          setError('Please enter a valid account number (minimum 6 digits).');
+          return;
+        }
       }
       if ((formData.role === 'manager' || formData.role === 'security') && !formData.staffId?.trim()) {
         setError('Staff ID is required for administrative roles.');
@@ -396,6 +418,50 @@ export default function AuthView() {
                   value={formData.staffId || ''}
                   onChange={handleChange}
                   placeholder="e.g. TLR006"
+                  className="glass-input"
+                  style={{ paddingLeft: '40px', paddingRight: '14px', height: '44px', fontSize: '0.9rem' }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Bank Selector (Sign Up only for customer) */}
+          {!isLogin && formData.role === 'customer' && (
+            <div className="animate-fade-in">
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                Your Bank
+              </label>
+              <div style={{ position: 'relative' }}>
+                <Building size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-secondary)' }} />
+                <select
+                  name="bank"
+                  value={formData.bank}
+                  onChange={handleChange}
+                  className="glass-input"
+                  style={{ paddingLeft: '40px', paddingRight: '14px', height: '44px', fontSize: '0.9rem', appearance: 'none', cursor: 'pointer' }}
+                >
+                  {GH_BANKS.map(bank => (
+                    <option key={bank} value={bank}>{bank}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Account Number Row (Sign Up only for customer) */}
+          {!isLogin && formData.role === 'customer' && (
+            <div className="animate-fade-in">
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                Account Number
+              </label>
+              <div style={{ position: 'relative' }}>
+                <CreditCard size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-secondary)' }} />
+                <input
+                  type="text"
+                  name="accountNumber"
+                  value={formData.accountNumber || ''}
+                  onChange={handleChange}
+                  placeholder="e.g. 102498762193"
                   className="glass-input"
                   style={{ paddingLeft: '40px', paddingRight: '14px', height: '44px', fontSize: '0.9rem' }}
                 />

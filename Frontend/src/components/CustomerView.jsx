@@ -22,11 +22,11 @@ const VISIT_PURPOSES = [
 ];
 
 export default function CustomerView() {
-  const { activeTicket, addCheckIn, counters, checkIns } = useApp();
+  const { activeTicket, addCheckIn, counters, checkIns, user } = useApp();
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    bank: GH_BANKS[0],
+    name: user ? user.name : '',
+    phone: user ? user.email : '',
+    bank: user && user.bank ? user.bank : GH_BANKS[0],
     purpose: VISIT_PURPOSES[0],
     isVip: false
   });
