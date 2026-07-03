@@ -20,13 +20,6 @@ export default function AuthView() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Fallback loginMethod if selected registration role changes to customer
-  useEffect(() => {
-    if (formData.role === 'customer' && loginMethod === 'staffId') {
-      setLoginMethod('accountNumber');
-    }
-  }, [formData.role, loginMethod]);
-
   // Form Fields
   const [formData, setFormData] = useState({
     name: '',
@@ -38,6 +31,13 @@ export default function AuthView() {
     bank: GH_BANKS[0],
     accountNumber: ''
   });
+
+  // Fallback loginMethod if selected registration role changes to customer
+  useEffect(() => {
+    if (formData.role === 'customer' && loginMethod === 'staffId') {
+      setLoginMethod('accountNumber');
+    }
+  }, [formData.role, loginMethod]);
 
   // Password regulations state
   const [pwValidations, setPwValidations] = useState({
