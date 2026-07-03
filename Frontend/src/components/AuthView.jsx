@@ -20,12 +20,12 @@ export default function AuthView() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Fallback loginMethod if simulated role changes to customer
+  // Fallback loginMethod if selected registration role changes to customer
   useEffect(() => {
-    if (activeRole === 'customer' && loginMethod === 'staffId') {
+    if (formData.role === 'customer' && loginMethod === 'staffId') {
       setLoginMethod('accountNumber');
     }
-  }, [activeRole, loginMethod]);
+  }, [formData.role, loginMethod]);
 
   // Form Fields
   const [formData, setFormData] = useState({
@@ -265,7 +265,7 @@ export default function AuthView() {
             >
               Account No.
             </button>
-            {activeRole !== 'customer' && (
+            {formData.role !== 'customer' && (
               <button
                 type="button"
                 onClick={() => { setLoginMethod('staffId'); setError(''); }}
@@ -427,7 +427,7 @@ export default function AuthView() {
           )}
 
           {/* Role selector (Sign Up only) */}
-          {!isLogin && activeRole !== 'customer' && (
+          {!isLogin && (
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
                 Role Profile
@@ -441,9 +441,9 @@ export default function AuthView() {
                   className="glass-input"
                   style={{ paddingLeft: '40px', paddingRight: '14px', height: '44px', fontSize: '0.9rem', appearance: 'none', cursor: 'pointer' }}
                 >
-                  <option value="customer">Customer View</option>
-                  <option value="security">Security Guard</option>
-                  <option value="manager">Operations Manager</option>
+                  <option value="customer">Customer</option>
+                  <option value="manager">Admin</option>
+                  <option value="security">Security</option>
                 </select>
               </div>
             </div>
