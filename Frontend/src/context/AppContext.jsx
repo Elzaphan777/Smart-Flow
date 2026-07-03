@@ -38,6 +38,16 @@ export const AppProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : null;
   });
 
+  // Local Registered Users Registry (to persist created accounts with Staff IDs)
+  const [registeredUsers, setRegisteredUsers] = useState(() => {
+    const saved = localStorage.getItem('smartflow-registered-users');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('smartflow-registered-users', JSON.stringify(registeredUsers));
+  }, [registeredUsers]);
+
   // App Active Role (for demo switcher)
   const [activeRole, setActiveRole] = useState(() => localStorage.getItem('smartflow-role') || 'customer');
 
@@ -514,29 +524,50 @@ export const AppProvider = ({ children }) => {
   };
 
   // Authentication Helpers
-  const loginUser = (email, password) => {
-    // For demo purposes, we will match tellers or create general profiles
-    const teller = counters.find(c => c.staffId?.toLowerCase() === email.toLowerCase() || (c.email && c.email.toLowerCase() === email.toLowerCase()));
-    
+  const loginUser = (emailOrStaffId, password) => {
+    // Check locally registered accounts first (allows logging in with newly registered Staff IDs)
+    const customUser = registeredUsers.find(u => 
+      (u.email && u.email.toLowerCase() === emailOrStaffId.toLowerCase()) ||
+      (u.staffId && u.staffId.toLowerCase() === emailOrStaffId.toLowerCase())
+    );
+
     let loggedInUser = null;
-    if (teller) {
+
+    if (customUser) {
       loggedInUser = {
-        name: teller.name,
-        email: email,
-        role: teller.staffId === 'TLR001' ? 'manager' : 'security',
-        dob: '1990-05-10'
+        name: customUser.name,
+        email: customUser.email,
+        role: customUser.role,
+        dob: customUser.dob,
+        staffId: customUser.staffId
       };
     } else {
-      loggedInUser = {
-        name: email.split('@')[0],
-        email: email,
-        role: 'customer',
-        dob: '1995-12-01'
-      };
+      // Fallback: match backend seeded tellers
+      const teller = counters.find(c => c.staffId?.toLowerCase() === emailOrStaffId.toLowerCase() || (c.email && c.email.toLowerCase() === emailOrStaffId.toLowerCase()));
+      
+      if (teller) {
+        loggedInUser = {
+          name: teller.name,
+          email: teller.email || `${teller.staffId.toLowerCase()}@smartflow.com`,
+          role: teller.staffId === 'TLR001' ? 'manager' : 'security',
+          dob: '1990-05-10',
+          staffId: teller.staffId
+        };
+      } else {
+        loggedInUser = {
+          name: emailOrStaffId.includes('@') ? emailOrStaffId.split('@')[0] : emailOrStaffId,
+          email: emailOrStaffId.includes('@') ? emailOrStaffId : `${emailOrStaffId.toLowerCase()}@smartflow.com`,
+          role: 'customer',
+          dob: '1995-12-01',
+          staffId: null
+        };
+      }
     }
 
     setUser(loggedInUser);
     setActiveRole(loggedInUser.role);
+    
+    // Background authentications triggered dynamically by context listeners will load backend JWTs
     addNotification({
       title: 'Welcome Back',
       message: `${loggedInUser.name} logged in successfully.`,
@@ -550,8 +581,11 @@ export const AppProvider = ({ children }) => {
       name: userData.name,
       email: userData.email,
       role: userData.role,
-      dob: userData.dob
+      dob: userData.dob,
+      staffId: userData.staffId || null
     };
+
+    setRegisteredUsers(prev => [...prev, newUser]);
     setUser(newUser);
     setActiveRole(userData.role);
     addNotification({

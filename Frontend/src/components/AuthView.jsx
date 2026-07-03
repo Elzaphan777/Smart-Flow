@@ -16,7 +16,8 @@ export default function AuthView() {
     email: '',
     password: '',
     dob: '',
-    role: 'customer'
+    role: 'customer',
+    staffId: ''
   });
 
   // Password regulations state
@@ -117,6 +118,10 @@ export default function AuthView() {
       }
       if (!validateAge(formData.dob)) {
         setError('Age Requirement Error: You must be at least 18 years old to register.');
+        return;
+      }
+      if ((formData.role === 'manager' || formData.role === 'security') && !formData.staffId?.trim()) {
+        setError('Staff ID is required for administrative roles.');
         return;
       }
       if (!formData.password) {
@@ -373,6 +378,27 @@ export default function AuthView() {
                   <option value="security">Security Guard</option>
                   <option value="manager">Operations Manager</option>
                 </select>
+              </div>
+            </div>
+          )}
+
+          {/* Staff ID Field (Sign Up only for manager/security) */}
+          {!isLogin && (formData.role === 'manager' || formData.role === 'security') && (
+            <div className="animate-fade-in">
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                Staff ID
+              </label>
+              <div style={{ position: 'relative' }}>
+                <Shield size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-secondary)' }} />
+                <input
+                  type="text"
+                  name="staffId"
+                  value={formData.staffId || ''}
+                  onChange={handleChange}
+                  placeholder="e.g. TLR006"
+                  className="glass-input"
+                  style={{ paddingLeft: '40px', paddingRight: '14px', height: '44px', fontSize: '0.9rem' }}
+                />
               </div>
             </div>
           )}
