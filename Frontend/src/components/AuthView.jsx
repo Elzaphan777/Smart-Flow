@@ -13,12 +13,19 @@ const GH_BANKS = [
 ];
 
 export default function AuthView() {
-  const { loginUser, registerUser } = useApp();
+  const { loginUser, registerUser, activeRole } = useApp();
   const [isLogin, setIsLogin] = useState(true);
   const [loginMethod, setLoginMethod] = useState('accountNumber'); // 'accountNumber' | 'staffId' | 'email'
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Fallback loginMethod if simulated role changes to customer
+  useEffect(() => {
+    if (activeRole === 'customer' && loginMethod === 'staffId') {
+      setLoginMethod('accountNumber');
+    }
+  }, [activeRole, loginMethod]);
 
   // Form Fields
   const [formData, setFormData] = useState({
@@ -258,24 +265,26 @@ export default function AuthView() {
             >
               Account No.
             </button>
-            <button
-              type="button"
-              onClick={() => { setLoginMethod('staffId'); setError(''); }}
-              style={{
-                flex: 1,
-                border: 'none',
-                background: loginMethod === 'staffId' ? 'var(--color-accent)' : 'none',
-                color: loginMethod === 'staffId' ? '#ffffff' : 'var(--text-secondary)',
-                padding: '6px 8px',
-                borderRadius: '6px',
-                fontSize: '0.7rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Staff ID
-            </button>
+            {activeRole !== 'customer' && (
+              <button
+                type="button"
+                onClick={() => { setLoginMethod('staffId'); setError(''); }}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  background: loginMethod === 'staffId' ? 'var(--color-accent)' : 'none',
+                  color: loginMethod === 'staffId' ? '#ffffff' : 'var(--text-secondary)',
+                  padding: '6px 8px',
+                  borderRadius: '6px',
+                  fontSize: '0.7rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Staff ID
+              </button>
+            )}
             <button
               type="button"
               onClick={() => { setLoginMethod('email'); setError(''); }}
@@ -418,7 +427,7 @@ export default function AuthView() {
           )}
 
           {/* Role selector (Sign Up only) */}
-          {!isLogin && (
+          {!isLogin && activeRole !== 'customer' && (
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
                 Role Profile
