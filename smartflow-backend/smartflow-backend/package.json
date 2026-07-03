@@ -8,7 +8,12 @@
     "dev": "nodemon server.js",
     "seed": "node scripts/seed.js"
   },
-  "keywords": ["queue", "banking", "routing", "websocket"],
+  "keywords": [
+    "queue",
+    "banking",
+    "routing",
+    "websocket"
+  ],
   "author": "Kwesi Agyiri Acquah (8979723)",
   "license": "ISC",
   "dependencies": {
@@ -24,6 +29,7 @@
     "socket.io": "^4.6.1"
   },
   "devDependencies": {
+    "mongodb-memory-server": "^11.2.0",
     "nodemon": "^3.0.1"
   }
 }

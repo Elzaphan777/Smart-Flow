@@ -63,7 +63,7 @@ exports.toggleAvailability = async (req, res, next) => {
 // PATCH /api/tellers/:id  (manager/admin — update specializations, window, etc.)
 exports.updateTeller = async (req, res, next) => {
   try {
-    const allowedFields = ['specializations', 'windowNumber', 'role', 'name'];
+    const allowedFields = ['specializations', 'windowNumber', 'role', 'name', 'isOnline', 'isAvailable'];
     const updates = {};
     allowedFields.forEach((f) => {
       if (req.body[f] !== undefined) updates[f] = req.body[f];
@@ -75,6 +75,18 @@ exports.updateTeller = async (req, res, next) => {
     });
 
     if (!teller) return res.status(404).json({ success: false, message: 'Teller not found.' });
+
+    // Emit socket update if online/available status changed
+    const io = req.app.get('io');
+    if (io && (req.body.isAvailable !== undefined || req.body.isOnline !== undefined)) {
+      io.to('managers').emit('teller_status_change', {
+        tellerId: teller._id,
+        windowNumber: teller.windowNumber,
+        isAvailable: teller.isAvailable,
+        isOnline: teller.isOnline,
+      });
+    }
+
     res.status(200).json({ success: true, data: teller });
   } catch (err) {
     next(err);

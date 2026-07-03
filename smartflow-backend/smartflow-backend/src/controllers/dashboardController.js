@@ -106,3 +106,41 @@ exports.getServiceTypes = async (req, res) => {
   const { SERVICE_TYPES } = require('../models/Teller');
   res.status(200).json({ success: true, data: SERVICE_TYPES });
 };
+
+// POST /api/dashboard/reset  (manager only — clear all tickets and reset teller stats)
+exports.resetBranch = async (req, res, next) => {
+  try {
+    // Delete all tickets
+    await Ticket.deleteMany({});
+
+    // Reset all tellers
+    await Teller.updateMany({}, {
+      isOnline: false,
+      isAvailable: false,
+      currentTicket: null,
+      stats: {
+        ticketsServedToday: 0,
+        totalServiceTimeToday: 0,
+        avgServiceTime: 0,
+      },
+    });
+
+    // Automatically make the requesting manager online & available so they aren't booted
+    if (req.teller) {
+      await Teller.findByIdAndUpdate(req.teller._id, {
+        isOnline: true,
+        isAvailable: true,
+      });
+    }
+
+    // Emit live updates to sockets
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('queue_update', { type: 'system_reset' });
+    }
+
+    res.status(200).json({ success: true, message: 'Database reset successfully. Queues are cleared.' });
+  } catch (err) {
+    next(err);
+  }
+};

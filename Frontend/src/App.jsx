@@ -3,10 +3,11 @@ import { AppProvider, useApp } from './context/AppContext';
 import CustomerView from './components/CustomerView';
 import SecurityView from './components/SecurityView';
 import ManagerView from './components/ManagerView';
-import { Sun, Moon, Shield, User, Landmark, Bell } from 'lucide-react';
+import AuthView from './components/AuthView';
+import { Sun, Moon, Shield, User, Landmark, Bell, LogOut } from 'lucide-react';
 
 function AppContent() {
-  const { theme, toggleTheme, activeRole, setActiveRole, notifications } = useApp();
+  const { theme, toggleTheme, activeRole, setActiveRole, notifications, user, logoutUser } = useApp();
 
   const unreadAlerts = notifications.filter(n => !n.read).length;
 
@@ -20,44 +21,46 @@ function AppContent() {
       width: '100%',
       padding: '20px'
     }}>
-      {/* Interactive Role Switcher - Demo Helper */}
-      <div className="glass-panel" style={{
-        padding: '12px 24px',
-        marginBottom: '20px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '16px',
-        maxWidth: '480px',
-        width: '100%',
-        justifyContent: 'space-between'
-      }}>
-        <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
-          DEMO SWITCHER:
-        </span>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            onClick={() => setActiveRole('customer')}
-            className={`glass-button ${activeRole === 'customer' ? 'primary' : ''}`}
-            style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem' }}
-          >
-            <User size={12} /> Customer
-          </button>
-          <button
-            onClick={() => setActiveRole('security')}
-            className={`glass-button ${activeRole === 'security' ? 'primary' : ''}`}
-            style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem' }}
-          >
-            <Shield size={12} /> Security
-          </button>
-          <button
-            onClick={() => setActiveRole('manager')}
-            className={`glass-button ${activeRole === 'manager' ? 'primary' : ''}`}
-            style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem' }}
-          >
-            <Landmark size={12} /> Manager
-          </button>
+      {/* Interactive Role Switcher - Demo Helper (Hidden for Customers to simulate true role routing) */}
+      {user && user.role !== 'customer' && (
+        <div className="glass-panel animate-fade-in" style={{
+          padding: '12px 24px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          maxWidth: '480px',
+          width: '100%',
+          justifyContent: 'space-between'
+        }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+            DEMO SWITCHER:
+          </span>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => setActiveRole('customer')}
+              className={`glass-button ${activeRole === 'customer' ? 'primary' : ''}`}
+              style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem' }}
+            >
+              <User size={12} /> Customer
+            </button>
+            <button
+              onClick={() => setActiveRole('security')}
+              className={`glass-button ${activeRole === 'security' ? 'primary' : ''}`}
+              style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem' }}
+            >
+              <Shield size={12} /> Security
+            </button>
+            <button
+              onClick={() => setActiveRole('manager')}
+              className={`glass-button ${activeRole === 'manager' ? 'primary' : ''}`}
+              style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem' }}
+            >
+              <Landmark size={12} /> Manager
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Mobile Device Mockup Frame */}
       <div className="glass-panel" style={{
@@ -111,8 +114,15 @@ function AppContent() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* User details when logged in */}
+            {user && (
+              <span className="badge primary" style={{ fontSize: '0.65rem', textTransform: 'capitalize' }}>
+                {user.role}
+              </span>
+            )}
+
             {/* Show Alerts count only to Security/Manager */}
-            {activeRole !== 'customer' && unreadAlerts > 0 && (
+            {user && activeRole !== 'customer' && unreadAlerts > 0 && (
               <div style={{ position: 'relative', color: 'var(--text-primary)', display: 'flex', alignItems: 'center' }}>
                 <Bell size={18} />
                 <span style={{
@@ -150,6 +160,25 @@ function AppContent() {
             >
               {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
+
+            {/* Logout button */}
+            {user && (
+              <button
+                onClick={logoutUser}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-danger)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '4px'
+                }}
+                title="Sign Out"
+              >
+                <LogOut size={18} />
+              </button>
+            )}
           </div>
         </header>
 
@@ -160,9 +189,15 @@ function AppContent() {
           background: 'rgba(255, 255, 255, 0.01)',
           paddingBottom: '20px'
         }}>
-          {activeRole === 'customer' && <CustomerView />}
-          {activeRole === 'security' && <SecurityView />}
-          {activeRole === 'manager' && <ManagerView />}
+          {user ? (
+            <>
+              {activeRole === 'customer' && <CustomerView />}
+              {activeRole === 'security' && <SecurityView />}
+              {activeRole === 'manager' && <ManagerView />}
+            </>
+          ) : (
+            <AuthView />
+          )}
         </main>
 
         {/* Mobile Device Home Bar cutout */}
