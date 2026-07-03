@@ -15,7 +15,7 @@ const GH_BANKS = [
 export default function AuthView() {
   const { loginUser, registerUser } = useApp();
   const [isLogin, setIsLogin] = useState(true);
-  const [loginMethod, setLoginMethod] = useState('staffId'); // 'staffId' | 'email'
+  const [loginMethod, setLoginMethod] = useState('accountNumber'); // 'accountNumber' | 'staffId' | 'email'
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -87,13 +87,23 @@ export default function AuthView() {
           setError('Please enter a valid email address.');
           return;
         }
-      } else {
+      } else if (loginMethod === 'staffId') {
         if (!formData.email.trim()) {
           setError('Staff ID is required.');
           return;
         }
         if (formData.email.trim().length < 3) {
           setError('Staff ID must be at least 3 characters long.');
+          return;
+        }
+      } else {
+        // Account Number verification
+        if (!formData.email.trim()) {
+          setError('Account Number is required.');
+          return;
+        }
+        if (formData.email.trim().length < 6) {
+          setError('Account Number must be at least 6 digits long.');
           return;
         }
       }
@@ -232,21 +242,39 @@ export default function AuthView() {
           }}>
             <button
               type="button"
+              onClick={() => { setLoginMethod('accountNumber'); setError(''); }}
+              style={{
+                flex: 1,
+                border: 'none',
+                background: loginMethod === 'accountNumber' ? 'var(--color-accent)' : 'none',
+                color: loginMethod === 'accountNumber' ? '#ffffff' : 'var(--text-secondary)',
+                padding: '6px 8px',
+                borderRadius: '6px',
+                fontSize: '0.7rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Account No.
+            </button>
+            <button
+              type="button"
               onClick={() => { setLoginMethod('staffId'); setError(''); }}
               style={{
                 flex: 1,
                 border: 'none',
                 background: loginMethod === 'staffId' ? 'var(--color-accent)' : 'none',
                 color: loginMethod === 'staffId' ? '#ffffff' : 'var(--text-secondary)',
-                padding: '6px 12px',
+                padding: '6px 8px',
                 borderRadius: '6px',
-                fontSize: '0.75rem',
+                fontSize: '0.7rem',
                 fontWeight: '600',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease'
               }}
             >
-              Staff ID Login
+              Staff ID
             </button>
             <button
               type="button"
@@ -256,15 +284,15 @@ export default function AuthView() {
                 border: 'none',
                 background: loginMethod === 'email' ? 'var(--color-accent)' : 'none',
                 color: loginMethod === 'email' ? '#ffffff' : 'var(--text-secondary)',
-                padding: '6px 12px',
+                padding: '6px 8px',
                 borderRadius: '6px',
-                fontSize: '0.75rem',
+                fontSize: '0.7rem',
                 fontWeight: '600',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease'
               }}
             >
-              Email Login
+              Email
             </button>
           </div>
         )}
@@ -334,16 +362,22 @@ export default function AuthView() {
             </div>
           )}
 
-          {/* Email Address / Staff ID Input */}
+          {/* Email Address / Staff ID / Account Number Input */}
           <div>
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-              {(!isLogin || loginMethod === 'email') ? 'Email Address' : 'Staff ID'}
+              {!isLogin 
+                ? 'Email Address' 
+                : (loginMethod === 'email' 
+                    ? 'Email Address' 
+                    : (loginMethod === 'staffId' ? 'Staff ID' : 'Account Number'))}
             </label>
             <div style={{ position: 'relative' }}>
-              {(!isLogin || loginMethod === 'email') ? (
+              {!isLogin || loginMethod === 'email' ? (
                 <Mail size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-secondary)' }} />
-              ) : (
+              ) : loginMethod === 'staffId' ? (
                 <Shield size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-secondary)' }} />
+              ) : (
+                <CreditCard size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-secondary)' }} />
               )}
               <input
                 type="text"
@@ -353,7 +387,9 @@ export default function AuthView() {
                 placeholder={
                   !isLogin 
                     ? "yourname@domain.com" 
-                    : (loginMethod === 'email' ? "e.g. kofi@smartflow.com" : "e.g. TLR001")
+                    : (loginMethod === 'email' 
+                        ? "e.g. kofi@smartflow.com" 
+                        : (loginMethod === 'staffId' ? "e.g. TLR001" : "e.g. 102498762193"))
                 }
                 className="glass-input"
                 style={{ paddingLeft: '40px', paddingRight: '14px', height: '44px', fontSize: '0.9rem' }}

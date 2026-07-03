@@ -528,11 +528,12 @@ export const AppProvider = ({ children }) => {
   };
 
   // Authentication Helpers
-  const loginUser = (emailOrStaffId, password) => {
-    // Check locally registered accounts first (allows logging in with newly registered Staff IDs)
+  const loginUser = (emailOrStaffIdOrAccount, password) => {
+    // Check locally registered accounts first (allows logging in with newly registered Staff IDs / Account Numbers)
     const customUser = registeredUsers.find(u => 
-      (u.email && u.email.toLowerCase() === emailOrStaffId.toLowerCase()) ||
-      (u.staffId && u.staffId.toLowerCase() === emailOrStaffId.toLowerCase())
+      (u.email && u.email.toLowerCase() === emailOrStaffIdOrAccount.toLowerCase()) ||
+      (u.staffId && u.staffId.toLowerCase() === emailOrStaffIdOrAccount.toLowerCase()) ||
+      (u.accountNumber && u.accountNumber.toLowerCase() === emailOrStaffIdOrAccount.toLowerCase())
     );
 
     let loggedInUser = null;
@@ -543,11 +544,13 @@ export const AppProvider = ({ children }) => {
         email: customUser.email,
         role: customUser.role,
         dob: customUser.dob,
-        staffId: customUser.staffId
+        staffId: customUser.staffId,
+        bank: customUser.bank,
+        accountNumber: customUser.accountNumber
       };
     } else {
       // Fallback: match backend seeded tellers
-      const teller = counters.find(c => c.staffId?.toLowerCase() === emailOrStaffId.toLowerCase() || (c.email && c.email.toLowerCase() === emailOrStaffId.toLowerCase()));
+      const teller = counters.find(c => c.staffId?.toLowerCase() === emailOrStaffIdOrAccount.toLowerCase() || (c.email && c.email.toLowerCase() === emailOrStaffIdOrAccount.toLowerCase()));
       
       if (teller) {
         loggedInUser = {
@@ -555,15 +558,19 @@ export const AppProvider = ({ children }) => {
           email: teller.email || `${teller.staffId.toLowerCase()}@smartflow.com`,
           role: teller.staffId === 'TLR001' ? 'manager' : 'security',
           dob: '1990-05-10',
-          staffId: teller.staffId
+          staffId: teller.staffId,
+          bank: null,
+          accountNumber: null
         };
       } else {
         loggedInUser = {
-          name: emailOrStaffId.includes('@') ? emailOrStaffId.split('@')[0] : emailOrStaffId,
-          email: emailOrStaffId.includes('@') ? emailOrStaffId : `${emailOrStaffId.toLowerCase()}@smartflow.com`,
+          name: emailOrStaffIdOrAccount.includes('@') ? emailOrStaffIdOrAccount.split('@')[0] : emailOrStaffIdOrAccount,
+          email: emailOrStaffIdOrAccount.includes('@') ? emailOrStaffIdOrAccount : `${emailOrStaffIdOrAccount.toLowerCase()}@smartflow.com`,
           role: 'customer',
           dob: '1995-12-01',
-          staffId: null
+          staffId: null,
+          bank: null,
+          accountNumber: emailOrStaffIdOrAccount // Fallback to raw string
         };
       }
     }
