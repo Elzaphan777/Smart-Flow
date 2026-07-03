@@ -23,6 +23,8 @@ const ticketSchema = new mongoose.Schema(
     clientInfo: {
       name: { type: String, trim: true, default: 'Walk-in Client' },
       phone: { type: String, trim: true },
+      bank: { type: String, trim: true },
+      branch: { type: String, trim: true },
       accountNumber: { type: String, trim: true },
     },
     priority: {

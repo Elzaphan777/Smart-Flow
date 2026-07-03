@@ -366,7 +366,9 @@ export const AppProvider = ({ children }) => {
         clientInfo: {
           name: customerData.name,
           phone: customerData.phone,
-          accountNumber: customerData.bank
+          bank: customerData.bank,
+          branch: customerData.branch,
+          accountNumber: (user && user.accountNumber) ? user.accountNumber : 'N/A'
         }
       };
 
@@ -385,6 +387,8 @@ export const AppProvider = ({ children }) => {
           phone: customerData.phone,
           purpose: customerData.purpose,
           bank: customerData.bank,
+          branch: customerData.branch,
+          accountNumber: (user && user.accountNumber) ? user.accountNumber : 'N/A',
           isVip: customerData.isVip || false,
           ticketNumber: t.ticketNumber,
           status: t.status === 'waiting' ? 'checked_in' : 'directed',

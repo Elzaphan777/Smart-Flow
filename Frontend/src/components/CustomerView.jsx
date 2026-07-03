@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Ticket, User, Phone, Building, Layers, CheckCircle, Clock, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Ticket, User, Phone, Building, Layers, CheckCircle, Clock, AlertTriangle, ArrowRight, MapPin } from 'lucide-react';
 
 const GH_BANKS = [
   'GCB Bank',
@@ -11,6 +11,16 @@ const GH_BANKS = [
   'CalBank',
   'Zenith Bank Ghana'
 ];
+
+const BRANCHES_MAP = {
+  'GCB Bank': ['Accra High Street', 'Kumasi Main', 'Tamale Main', 'Takoradi Harbour', 'Tema Community 1', 'Sunyani Branch'],
+  'Ecobank Ghana': ['Ridge Head Office', 'Spintex Road', 'Osu Branch', 'KNUST Kumasi', 'East Legon', 'Airport City'],
+  'Stanbic Bank': ['Silver Star Tower', 'Tema Community 11', 'Adum Kumasi', 'West Hills Mall', 'Airport Residential'],
+  'Absa Bank Ghana': ['High Street Accra', 'Osu Cantonments', 'Kumasi Adum', 'Tamale Branch', 'Takoradi Main'],
+  'Fidelity Bank Ghana': ['Ridge Towers', 'Spintex Road', 'Ahodwo Kumasi', 'Koforidua Branch', 'Madina Ritz Junction'],
+  'CalBank': ['Head Office Accra', 'Kumasi Main', 'Takoradi Branch', 'Tema Main', 'East Legon'],
+  'Zenith Bank Ghana': ['Premier Towers', 'Spintex Branch', 'Adum Kumasi', 'East Legon', 'Tema Harbor']
+};
 
 const VISIT_PURPOSES = [
   'Cash Deposits',
@@ -23,10 +33,15 @@ const VISIT_PURPOSES = [
 
 export default function CustomerView() {
   const { activeTicket, addCheckIn, counters, checkIns, user } = useApp();
+  
+  const initialBank = user && user.bank ? user.bank : GH_BANKS[0];
+  const initialBranch = BRANCHES_MAP[initialBank] ? BRANCHES_MAP[initialBank][0] : '';
+
   const [formData, setFormData] = useState({
     name: user ? user.name : '',
-    phone: user ? user.email : '',
-    bank: user && user.bank ? user.bank : GH_BANKS[0],
+    phone: user ? '0241234567' : '',
+    bank: initialBank,
+    branch: initialBranch,
     purpose: VISIT_PURPOSES[0],
     isVip: false
   });
@@ -34,10 +49,19 @@ export default function CustomerView() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    if (name === 'bank') {
+      const nextBranch = BRANCHES_MAP[value] ? BRANCHES_MAP[value][0] : '';
+      setFormData(prev => ({
+        ...prev,
+        bank: value,
+        branch: nextBranch
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
   };
 
   const handleSubmit = (e) => {
@@ -48,6 +72,14 @@ export default function CustomerView() {
     }
     if (!formData.phone.trim() || formData.phone.length < 9) {
       setError('Please enter a valid phone number.');
+      return;
+    }
+    if (!formData.bank) {
+      setError('Please select a bank.');
+      return;
+    }
+    if (!formData.branch) {
+      setError('Please select a branch.');
       return;
     }
     setError('');
@@ -157,6 +189,26 @@ export default function CustomerView() {
                 >
                   {GH_BANKS.map(bank => (
                     <option key={bank} value={bank}>{bank}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                Select Branch
+              </label>
+              <div style={{ position: 'relative' }}>
+                <MapPin size={18} style={{ position: 'absolute', left: '14px', top: '16px', color: 'var(--text-secondary)' }} />
+                <select
+                  name="branch"
+                  value={formData.branch}
+                  onChange={handleChange}
+                  className="glass-input"
+                  style={{ paddingLeft: '44px', appearance: 'none', cursor: 'pointer' }}
+                >
+                  {(BRANCHES_MAP[formData.bank] || []).map(br => (
+                    <option key={br} value={br}>{br}</option>
                   ))}
                 </select>
               </div>

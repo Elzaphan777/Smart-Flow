@@ -109,7 +109,7 @@ export default function SecurityView() {
                       </div>
                       <h4 style={{ fontSize: '0.95rem', margin: '4px 0 2px 0' }}>{customer.name}</h4>
                       <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                        {customer.bank} • <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{customer.purpose}</span>
+                        {customer.bank} ({customer.branch || 'Accra Main'}) • <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{customer.purpose}</span>
                       </p>
                     </div>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{customer.checkInTime}</span>
