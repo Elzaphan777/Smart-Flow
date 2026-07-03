@@ -5,6 +5,7 @@ import { User, Mail, Lock, Calendar, Shield, Eye, EyeOff, Check, X, AlertTriangl
 export default function AuthView() {
   const { loginUser, registerUser } = useApp();
   const [isLogin, setIsLogin] = useState(true);
+  const [loginMethod, setLoginMethod] = useState('staffId'); // 'staffId' | 'email'
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -62,21 +63,33 @@ export default function AuthView() {
     setError('');
     setSuccess('');
 
-    // Common validations
-    if (!formData.email.trim()) {
-      setError('Email address is required.');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    if (!formData.password) {
-      setError('Password is required.');
-      return;
-    }
-
     if (isLogin) {
+      // Login validation based on selection method
+      if (loginMethod === 'email') {
+        if (!formData.email.trim()) {
+          setError('Email address is required.');
+          return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+          setError('Please enter a valid email address.');
+          return;
+        }
+      } else {
+        if (!formData.email.trim()) {
+          setError('Staff ID is required.');
+          return;
+        }
+        if (formData.email.trim().length < 3) {
+          setError('Staff ID must be at least 3 characters long.');
+          return;
+        }
+      }
+
+      if (!formData.password) {
+        setError('Password is required.');
+        return;
+      }
+
       // Login flow
       const res = loginUser(formData.email, formData.password);
       if (res.success) {
@@ -85,9 +98,17 @@ export default function AuthView() {
         setError(res.message || 'Login failed.');
       }
     } else {
-      // Registration flow
+      // Registration validation
       if (!formData.name.trim()) {
         setError('Full Name is required.');
+        return;
+      }
+      if (!formData.email.trim()) {
+        setError('Email address is required.');
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        setError('Please enter a valid email address.');
         return;
       }
       if (!formData.dob) {
@@ -96,6 +117,10 @@ export default function AuthView() {
       }
       if (!validateAge(formData.dob)) {
         setError('Age Requirement Error: You must be at least 18 years old to register.');
+        return;
+      }
+      if (!formData.password) {
+        setError('Password is required.');
         return;
       }
 
@@ -167,6 +192,56 @@ export default function AuthView() {
           </button>
         </div>
 
+        {/* Login Method Pills Selector */}
+        {isLogin && (
+          <div style={{
+            display: 'flex',
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid var(--card-border)',
+            borderRadius: '10px',
+            padding: '4px',
+            marginBottom: '20px',
+            gap: '4px'
+          }}>
+            <button
+              type="button"
+              onClick={() => { setLoginMethod('staffId'); setError(''); }}
+              style={{
+                flex: 1,
+                border: 'none',
+                background: loginMethod === 'staffId' ? 'var(--color-accent)' : 'none',
+                color: loginMethod === 'staffId' ? '#ffffff' : 'var(--text-secondary)',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Staff ID Login
+            </button>
+            <button
+              type="button"
+              onClick={() => { setLoginMethod('email'); setError(''); }}
+              style={{
+                flex: 1,
+                border: 'none',
+                background: loginMethod === 'email' ? 'var(--color-accent)' : 'none',
+                color: loginMethod === 'email' ? '#ffffff' : 'var(--text-secondary)',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Email Login
+            </button>
+          </div>
+        )}
+
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)' }}>
             {isLogin ? 'Welcome Back' : 'Get Started'}
@@ -232,19 +307,27 @@ export default function AuthView() {
             </div>
           )}
 
-          {/* Email Address */}
+          {/* Email Address / Staff ID Input */}
           <div>
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-              Email Address / Staff ID
+              {(!isLogin || loginMethod === 'email') ? 'Email Address' : 'Staff ID'}
             </label>
             <div style={{ position: 'relative' }}>
-              <Mail size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-secondary)' }} />
+              {(!isLogin || loginMethod === 'email') ? (
+                <Mail size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-secondary)' }} />
+              ) : (
+                <Shield size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-secondary)' }} />
+              )}
               <input
                 type="text"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder={isLogin ? "Staff ID (e.g. TLR001) or Email" : "yourname@domain.com"}
+                placeholder={
+                  !isLogin 
+                    ? "yourname@domain.com" 
+                    : (loginMethod === 'email' ? "e.g. kofi@smartflow.com" : "e.g. TLR001")
+                }
                 className="glass-input"
                 style={{ paddingLeft: '40px', paddingRight: '14px', height: '44px', fontSize: '0.9rem' }}
               />
