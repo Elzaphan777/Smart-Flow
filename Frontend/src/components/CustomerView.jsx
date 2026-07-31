@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Ticket, User, Phone, Building, Layers, CheckCircle, Clock, AlertTriangle, ArrowRight, MapPin } from 'lucide-react';
+import { Ticket, User, Phone, Building, Layers, CheckCircle, Clock, AlertTriangle, ArrowRight, MapPin, Landmark, HeartHandshake, ShieldCheck } from 'lucide-react';
 
 const GH_BANKS = [
   'GCB Bank',
@@ -31,8 +31,23 @@ const VISIT_PURPOSES = [
   'Card Issues / Password Reset'
 ];
 
+const Barcode = () => {
+  const bars = [
+    'thick', 'thin', 'medium', 'thick', 'thin', 'thin', 'medium', 'thick',
+    'thin', 'medium', 'thin', 'thick', 'medium', 'thin', 'thick', 'thin',
+    'thick', 'thin', 'medium', 'thin', 'thick', 'thin'
+  ];
+  return (
+    <div className="barcode">
+      {bars.map((bar, i) => (
+        <div key={i} className={`barcode-line ${bar}`} />
+      ))}
+    </div>
+  );
+};
+
 export default function CustomerView() {
-  const { activeTicket, addCheckIn, counters, checkIns, user } = useApp();
+  const { activeTicket, addCheckIn, counters, user } = useApp();
   
   const initialBank = user && user.bank ? user.bank : GH_BANKS[0];
   const initialBranch = BRANCHES_MAP[initialBank] ? BRANCHES_MAP[initialBank][0] : '';
@@ -86,304 +101,371 @@ export default function CustomerView() {
     addCheckIn(formData);
   };
 
-  // Calculate wait position if assigned to a counter
   const getQueuePosition = () => {
     if (!activeTicket || !activeTicket.assignedCounterId) return null;
     const assignedCounter = counters.find(c => c.id === activeTicket.assignedCounterId);
     if (!assignedCounter) return 0;
     
-    // Find index of this customer in the counter queue
     const idx = assignedCounter.customers.findIndex(c => c.ticketNumber === activeTicket.ticketNumber);
     return idx >= 0 ? idx + 1 : 1;
   };
 
   const position = getQueuePosition();
+  const openCounters = counters.filter(c => c.isOpen);
 
   return (
-    <div className="customer-view animate-fade-in" style={{ padding: '16px' }}>
+    <div className="customer-view animate-fade-in" style={{ width: '100%' }}>
       {!activeTicket ? (
-        <div className="glass-panel" style={{ padding: '24px', margin: '0 auto', maxWidth: '450px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <div style={{
-              display: 'inline-flex',
-              padding: '12px',
-              borderRadius: '50%',
-              background: 'var(--color-accent-light)',
-              color: 'var(--color-accent)',
-              marginBottom: '12px'
-            }}>
-              <Ticket size={28} />
+        <div className="grid-2">
+          {/* Left Column: Welcoming Brand Intro (Homely & Approchable) */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            padding: '24px',
+            gap: '24px'
+          }}>
+            <div>
+              <span className="badge primary" style={{ marginBottom: '12px' }}>Welcome to SmartFlow</span>
+              <h2 style={{ fontSize: '2.5rem', lineHeight: '1.2', color: 'var(--color-accent)', fontWeight: '700' }}>
+                Your comfort is our top priority.
+              </h2>
+              <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', marginTop: '14px' }}>
+                Skip the physical lines. Check in online to join the digital queue and we will direct you to the ideal window as soon as a teller becomes available.
+              </p>
             </div>
-            <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)' }}>Ghana Branch Check-In</h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              Welcome to Smart Flow. Please check in to join the queue.
-            </p>
+
+            {/* Benefit Bullets */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                <div style={{ color: 'var(--color-secondary)', padding: '6px', background: 'var(--color-secondary-light)', borderRadius: '8px', display: 'flex' }}>
+                  <HeartHandshake size={20} />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '600' }}>Homely Assistance</h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Senior citizens and priority guests receive immediate, dedicated assistance.</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                <div style={{ color: 'var(--color-accent)', padding: '6px', background: 'var(--color-accent-light)', borderRadius: '8px', display: 'flex' }}>
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '600' }}>Secure Queue Routing</h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Our smart routing engine maps you directly to specialists for foreign exchange, loans, or deposits.</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                <div style={{ color: 'var(--color-accent)', padding: '6px', background: 'var(--color-accent-light)', borderRadius: '8px', display: 'flex' }}>
+                  <Clock size={20} />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '600' }}>Real-time Queue Status</h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    Currently, {openCounters.length} teller windows are active and waiting to serve you.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {error && (
-              <div className="glass-panel" style={{
+          {/* Right Column: Portal Check-In Form */}
+          <div className="glass-panel" style={{ padding: '36px 30px', border: '1px solid var(--card-border)', background: 'var(--card-bg)' }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{
+                display: 'inline-flex',
                 padding: '12px',
-                borderColor: 'var(--color-danger)',
-                background: 'rgba(225, 29, 72, 0.05)',
-                color: 'var(--color-danger)',
-                fontSize: '0.85rem',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
+                borderRadius: '50%',
+                background: 'var(--color-accent-light)',
+                color: 'var(--color-accent)',
+                marginBottom: '12px'
               }}>
-                <AlertTriangle size={16} />
-                <span>{error}</span>
+                <Ticket size={24} />
               </div>
-            )}
+              <h3 style={{ fontSize: '1.5rem', color: 'var(--text-primary)' }}>Ghana Branch Check-In</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                Enter your details to generate your bank queue ticket.
+              </p>
+            </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                Full Name
-              </label>
-              <div style={{ position: 'relative' }}>
-                <User size={18} style={{ position: 'absolute', left: '14px', top: '16px', color: 'var(--text-secondary)' }} />
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              {error && (
+                <div className="glass-panel" style={{
+                  padding: '12px 16px',
+                  borderColor: 'var(--color-danger)',
+                  background: 'rgba(185, 28, 28, 0.05)',
+                  color: 'var(--color-danger)',
+                  fontSize: '0.85rem',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <AlertTriangle size={16} />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                  Full Name
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <User size={18} style={{ position: 'absolute', left: '14px', top: '13px', color: 'var(--text-secondary)' }} />
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="e.g. Kofi Mensah"
+                    className="glass-input"
+                    style={{ paddingLeft: '44px', height: '46px' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                  Phone Number
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Phone size={18} style={{ position: 'absolute', left: '14px', top: '13px', color: 'var(--text-secondary)' }} />
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="e.g. 0244123456"
+                    className="glass-input"
+                    style={{ paddingLeft: '44px', height: '46px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                    Your Bank
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Building size={18} style={{ position: 'absolute', left: '14px', top: '13px', color: 'var(--text-secondary)', zIndex: 1 }} />
+                    <select
+                      name="bank"
+                      value={formData.bank}
+                      onChange={handleChange}
+                      className="glass-input"
+                      style={{ paddingLeft: '44px', height: '46px' }}
+                    >
+                      {GH_BANKS.map(bank => (
+                        <option key={bank} value={bank}>{bank}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                    Select Branch
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <MapPin size={18} style={{ position: 'absolute', left: '14px', top: '13px', color: 'var(--text-secondary)', zIndex: 1 }} />
+                    <select
+                      name="branch"
+                      value={formData.branch}
+                      onChange={handleChange}
+                      className="glass-input"
+                      style={{ paddingLeft: '44px', height: '46px' }}
+                    >
+                      {(BRANCHES_MAP[formData.bank] || []).map(br => (
+                        <option key={br} value={br}>{br}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                  Purpose of Visit
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Layers size={18} style={{ position: 'absolute', left: '14px', top: '13px', color: 'var(--text-secondary)', zIndex: 1 }} />
+                  <select
+                    name="purpose"
+                    value={formData.purpose}
+                    onChange={handleChange}
+                    className="glass-input"
+                    style={{ paddingLeft: '44px', height: '46px' }}
+                  >
+                    {VISIT_PURPOSES.map(purpose => (
+                      <option key={purpose} value={purpose}>{purpose}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 0', borderTop: '1px solid var(--card-border)', borderBottom: '1px solid var(--card-border)' }}>
                 <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
+                  type="checkbox"
+                  id="isVip"
+                  name="isVip"
+                  checked={formData.isVip}
                   onChange={handleChange}
-                  placeholder="e.g. Kofi Mensah"
-                  className="glass-input"
-                  style={{ paddingLeft: '44px' }}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--card-border)',
+                    cursor: 'pointer',
+                    accentColor: 'var(--color-secondary)'
+                  }}
                 />
+                <label htmlFor="isVip" style={{ fontSize: '0.85rem', cursor: 'pointer', color: 'var(--text-secondary)', fontWeight: '600' }}>
+                  I require priority assistance (Senior Citizens / Expecting Mothers)
+                </label>
               </div>
-            </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                Phone Number
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Phone size={18} style={{ position: 'absolute', left: '14px', top: '16px', color: 'var(--text-secondary)' }} />
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="e.g. 0244123456"
-                  className="glass-input"
-                  style={{ paddingLeft: '44px' }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                Your Bank
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Building size={18} style={{ position: 'absolute', left: '14px', top: '16px', color: 'var(--text-secondary)' }} />
-                <select
-                  name="bank"
-                  value={formData.bank}
-                  onChange={handleChange}
-                  className="glass-input"
-                  style={{ paddingLeft: '44px', appearance: 'none', cursor: 'pointer' }}
-                >
-                  {GH_BANKS.map(bank => (
-                    <option key={bank} value={bank}>{bank}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                Select Branch
-              </label>
-              <div style={{ position: 'relative' }}>
-                <MapPin size={18} style={{ position: 'absolute', left: '14px', top: '16px', color: 'var(--text-secondary)' }} />
-                <select
-                  name="branch"
-                  value={formData.branch}
-                  onChange={handleChange}
-                  className="glass-input"
-                  style={{ paddingLeft: '44px', appearance: 'none', cursor: 'pointer' }}
-                >
-                  {(BRANCHES_MAP[formData.bank] || []).map(br => (
-                    <option key={br} value={br}>{br}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                Purpose of Visit
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Layers size={18} style={{ position: 'absolute', left: '14px', top: '16px', color: 'var(--text-secondary)' }} />
-                <select
-                  name="purpose"
-                  value={formData.purpose}
-                  onChange={handleChange}
-                  className="glass-input"
-                  style={{ paddingLeft: '44px', appearance: 'none', cursor: 'pointer' }}
-                >
-                  {VISIT_PURPOSES.map(purpose => (
-                    <option key={purpose} value={purpose}>{purpose}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0' }}>
-              <input
-                type="checkbox"
-                id="isVip"
-                name="isVip"
-                checked={formData.isVip}
-                onChange={handleChange}
-                style={{
-                  width: '18px',
-                  height: '18px',
-                  borderRadius: '6px',
-                  border: '1px solid var(--card-border)',
-                  cursor: 'pointer',
-                  accentColor: 'var(--color-accent)'
-                }}
-              />
-              <label htmlFor="isVip" style={{ fontSize: '0.85rem', cursor: 'pointer', color: 'var(--text-secondary)' }}>
-                I am a senior citizen / require priority assistance
-              </label>
-            </div>
-
-            <button type="submit" className="glass-button primary" style={{ width: '100%', marginTop: '8px' }}>
-              Join Queue <ArrowRight size={18} />
-            </button>
-          </form>
+              <button type="submit" className="glass-button primary" style={{ width: '100%', height: '48px', borderRadius: '12px', marginTop: '6px', fontSize: '1rem' }}>
+                Join the Queue <ArrowRight size={18} />
+              </button>
+            </form>
+          </div>
         </div>
       ) : (
-        <div style={{ maxWidth: '450px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Virtual Ticket */}
-          <div className="glass-panel animate-fade-in" style={{
-            position: 'relative',
-            overflow: 'hidden',
-            padding: '30px 24px',
-            border: '2px dashed var(--card-border)',
-            borderRadius: '24px',
-            background: 'var(--card-bg)'
-          }}>
-            {/* Top cutouts for ticket look */}
-            <div style={{
-              position: 'absolute',
-              left: '-15px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: '30px',
-              height: '30px',
-              borderRadius: '50%',
-              background: 'var(--bg-primary)',
-              borderRight: '1px solid var(--card-border)',
-              zIndex: 5
-            }}></div>
-            <div style={{
-              position: 'absolute',
-              right: '-15px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: '30px',
-              height: '30px',
-              borderRadius: '50%',
-              background: 'var(--bg-primary)',
-              borderLeft: '1px solid var(--card-border)',
-              zIndex: 5
-            }}></div>
+        <div className="grid-2">
+          {/* Left Column: Physical Style Ticket Card */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '12px' }}>
+            <div className="ticket-card animate-fade-in" style={{
+              width: '100%',
+              maxWidth: '380px'
+            }}>
+              {/* Ticket side cutouts */}
+              <div className="ticket-cutout-left" />
+              <div className="ticket-cutout-right" />
 
-            <div style={{ textAlign: 'center', borderBottom: '1px dashed var(--card-border)', paddingBottom: '20px', marginBottom: '20px' }}>
-              <span className={`badge ${activeTicket.isVip ? 'danger' : 'primary'}`} style={{ marginBottom: '8px' }}>
-                {activeTicket.isVip ? '⭐ Priority Ticket' : 'Standard Ticket'}
-              </span>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{activeTicket.bank}</p>
-              <h1 style={{ fontSize: '3rem', fontWeight: '700', letterSpacing: '2px', color: 'var(--color-accent)', margin: '8px 0' }}>
-                {activeTicket.ticketNumber}
-              </h1>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: '600' }}>{activeTicket.name}</p>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Purpose: {activeTicket.purpose}</p>
+              <div style={{ textAlign: 'center', paddingBottom: '12px' }}>
+                <span className={`badge ${activeTicket.isVip ? 'secondary' : 'primary'}`} style={{ marginBottom: '12px' }}>
+                  {activeTicket.isVip ? '⭐ Priority Guest' : 'Standard Check-In'}
+                </span>
+                <p style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)', fontWeight: '700' }}>
+                  {activeTicket.bank}
+                </p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{activeTicket.branch || 'Accra Main Branch'}</p>
+                
+                {/* Large Authentic Ticket Number */}
+                <h2 style={{
+                  fontSize: '3.75rem',
+                  fontWeight: '800',
+                  letterSpacing: '1px',
+                  color: 'var(--color-accent)',
+                  margin: '16px 0',
+                  lineHeight: '1',
+                  fontFamily: 'var(--font-heading)'
+                }}>
+                  {activeTicket.ticketNumber}
+                </h2>
+                
+                <h4 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>{activeTicket.name}</h4>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>Purpose: {activeTicket.purpose}</p>
+              </div>
+
+              <div className="ticket-divider" />
+
+              {/* Barcode details */}
+              <Barcode />
+              <div style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '4px', letterSpacing: '2px' }}>
+                *TKT-{activeTicket.ticketNumber}*
+              </div>
+
+              <div style={{
+                fontSize: '0.7rem',
+                color: 'var(--text-secondary)',
+                textAlign: 'center',
+                marginTop: '20px',
+                borderTop: '1px solid rgba(32, 84, 70, 0.08)',
+                paddingTop: '16px'
+              }}>
+                Issued: {activeTicket.checkInTime} • SmartFlow Ghana
+              </div>
             </div>
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Right Column: Direction Card & Service Stats */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
+            <div className="glass-panel" style={{ padding: '30px', background: 'var(--card-bg)' }}>
+              <h3 style={{ fontSize: '1.25rem', color: 'var(--text-primary)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={20} style={{ color: 'var(--color-secondary)' }} /> Queue Tracking
+              </h3>
+
               {activeTicket.status === 'checked_in' ? (
                 <div style={{
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '14px',
-                  borderRadius: '12px',
-                  background: 'rgba(217, 119, 6, 0.08)',
-                  border: '1px solid rgba(217, 119, 6, 0.2)',
-                  color: 'var(--color-highlight)'
+                  alignItems: 'flex-start',
+                  gap: '14px',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  background: 'rgba(217, 119, 6, 0.06)',
+                  border: '1px solid rgba(217, 119, 6, 0.15)',
+                  color: 'var(--color-highlight)',
+                  marginBottom: '20px'
                 }}>
-                  <Clock size={20} className="animate-pulse-soft" />
+                  <Clock size={24} className="animate-pulse-soft" style={{ marginTop: '2px' }} />
                   <div>
-                    <h4 style={{ fontSize: '0.9rem', fontWeight: '600' }}>Awaiting Counter Assignment</h4>
-                    <p style={{ fontSize: '0.75rem', opacity: '0.85', marginTop: '2px' }}>
-                      Please check in with the security desk or wait for assignment.
+                    <h4 style={{ fontSize: '1rem', fontWeight: '700' }}>Awaiting Assignment</h4>
+                    <p style={{ fontSize: '0.85rem', opacity: '0.85', marginTop: '4px', lineHeight: '1.4' }}>
+                      We are routing you to the best available teller for <strong>{activeTicket.purpose}</strong>. Please have a seat in our customer lounge.
                     </p>
                   </div>
                 </div>
               ) : (
-                <>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '14px',
-                    borderRadius: '12px',
-                    background: 'var(--color-accent-light)',
-                    border: '1px solid var(--card-border)',
-                    color: 'var(--color-accent)'
-                  }}>
-                    <CheckCircle size={22} />
-                    <div>
-                      <h4 style={{ fontSize: '0.9rem', fontWeight: '600' }}>Counter Assigned!</h4>
-                      <p style={{ fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', marginTop: '2px' }}>
-                        Proceed to: {counters.find(c => c.id === activeTicket.assignedCounterId)?.name || 'Assigned Counter'}
-                      </p>
-                    </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '14px',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  background: 'var(--color-accent-light)',
+                  border: '1px solid var(--card-border)',
+                  color: 'var(--color-accent)',
+                  marginBottom: '20px'
+                }}>
+                  <CheckCircle size={26} style={{ marginTop: '2px' }} />
+                  <div>
+                    <h4 style={{ fontSize: '1rem', fontWeight: '700' }}>Your Window is Ready!</h4>
+                    <p style={{ fontSize: '1.1rem', fontWeight: '800', textTransform: 'uppercase', marginTop: '6px', color: 'var(--color-accent)' }}>
+                      Proceed to Window: {counters.find(c => c.id === activeTicket.assignedCounterId || c.staffId === activeTicket.assignedCounterId)?.windowNumber || 'Assigned Counter'}
+                    </p>
+                    <p style={{ fontSize: '0.85rem', opacity: '0.85', marginTop: '4px' }}>
+                      Teller: {counters.find(c => c.id === activeTicket.assignedCounterId || c.staffId === activeTicket.assignedCounterId)?.name?.split(' (')[0] || 'Representative'}
+                    </p>
                   </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
-                    <div className="glass-panel" style={{ flex: 1, padding: '12px', textAlign: 'center', borderRadius: '12px' }}>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Position in Line</p>
-                      <p style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '4px' }}>
-                        #{position !== null ? position : '--'}
-                      </p>
-                    </div>
-                    <div className="glass-panel" style={{ flex: 1, padding: '12px', textAlign: 'center', borderRadius: '12px' }}>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Estimated Wait</p>
-                      <p style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '4px' }}>
-                        {position !== null ? `${position * 3} mins` : '--'}
-                      </p>
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
 
-              <div style={{
-                fontSize: '0.75rem',
-                color: 'var(--text-secondary)',
-                textAlign: 'center',
-                marginTop: '12px',
-                borderTop: '1px solid var(--card-border)',
-                paddingTop: '12px'
-              }}>
-                Entry time: {activeTicket.checkInTime} • Thank you for banking with us.
+              {/* Waiting Stats Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="glass-panel" style={{ padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: 'none' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Queue Position</p>
+                  <p style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '4px' }}>
+                    {position !== null && position > 0 ? `#${position}` : 'Awaiting'}
+                  </p>
+                </div>
+                <div className="glass-panel" style={{ padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: 'none' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Est. Wait Time</p>
+                  <p style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '4px' }}>
+                    {position !== null && position > 0 ? `${position * 3}m` : '--'}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Note: This is a secure check-in. In keeping with bank policy, customer views are restricted to active ticket info only.
-            </p>
+            <div className="glass-panel" style={{ padding: '20px 24px', background: 'rgba(32, 84, 70, 0.02)', textAlign: 'center' }}>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                <MapPin size={14} /> Location: {activeTicket.branch} • Active Support Online
+              </p>
+            </div>
           </div>
         </div>
       )}

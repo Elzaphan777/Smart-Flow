@@ -1,0 +1,17 @@
+{
+  "name": "smartflow-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "Frontend",
+    "smartflow-backend/smartflow-backend"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=smartflow-backend/smartflow-backend",
+    "dev:frontend": "npm run dev --workspace=Frontend",
+    "dev": "npx concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4"
+  }
+}
