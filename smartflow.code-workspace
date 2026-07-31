@@ -1,0 +1,17 @@
+{
+  "folders": [
+    {
+      "name": "SmartFlow Frontend",
+      "path": "Frontend"
+    },
+    {
+      "name": "SmartFlow Backend",
+      "path": "smartflow-backend/smartflow-backend"
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  }
+}

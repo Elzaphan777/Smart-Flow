@@ -4,138 +4,95 @@ import CustomerView from './components/CustomerView';
 import SecurityView from './components/SecurityView';
 import ManagerView from './components/ManagerView';
 import AuthView from './components/AuthView';
-import { Sun, Moon, Shield, User, Landmark, Bell, LogOut } from 'lucide-react';
+import { Sun, Moon, Bell, LogOut, Landmark, User, Shield } from 'lucide-react';
 
 function AppContent() {
-  const { theme, toggleTheme, activeRole, setActiveRole, notifications, user, logoutUser } = useApp();
+  const { theme, toggleTheme, notifications, user, logoutUser } = useApp();
 
-  const unreadAlerts = notifications.filter(n => !n.read).length;
+  const unreadAlerts = notifications ? notifications.filter(n => !n.read).length : 0;
 
   return (
-    <div className="app-container" style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      width: '100%',
-      padding: '20px'
-    }}>
-      {/* Interactive Role Switcher - Demo Helper (Hidden for Customers to simulate true role routing) */}
-      {user && user.role !== 'customer' && (
-        <div className="glass-panel animate-fade-in" style={{
-          padding: '12px 24px',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px',
-          maxWidth: '480px',
-          width: '100%',
-          justifyContent: 'space-between'
-        }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
-            DEMO SWITCHER:
-          </span>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              onClick={() => setActiveRole('customer')}
-              className={`glass-button ${activeRole === 'customer' ? 'primary' : ''}`}
-              style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem' }}
-            >
-              <User size={12} /> Customer
-            </button>
-            <button
-              onClick={() => setActiveRole('security')}
-              className={`glass-button ${activeRole === 'security' ? 'primary' : ''}`}
-              style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem' }}
-            >
-              <Shield size={12} /> Security
-            </button>
-            <button
-              onClick={() => setActiveRole('manager')}
-              className={`glass-button ${activeRole === 'manager' ? 'primary' : ''}`}
-              style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem' }}
-            >
-              <Landmark size={12} /> Manager
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Device Mockup Frame */}
-      <div className="glass-panel" style={{
-        width: '100%',
-        maxWidth: '480px',
-        height: '800px',
-        display: 'flex',
-        flexDirection: 'column',
-        borderRadius: '36px',
-        overflow: 'hidden',
-        position: 'relative',
-        border: '6px solid var(--card-border)',
-        boxShadow: 'var(--shadow-lg)'
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Premium Full-Width Website Header */}
+      <header className="glass-panel" style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        borderRadius: '0 0 20px 20px',
+        borderLeft: 'none',
+        borderRight: 'none',
+        borderTop: 'none',
+        background: 'var(--card-bg)',
+        backdropFilter: 'blur(20px)',
+        boxShadow: 'var(--shadow-sm)'
       }}>
-        {/* Mobile Status Bar Indicator */}
-        <div style={{
-          height: '24px',
-          background: 'rgba(0,0,0,0.05)',
+        <div className="container" style={{
+          height: '70px',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '0 24px',
-          fontSize: '0.7rem',
-          color: 'var(--text-secondary)',
-          fontWeight: '600'
+          alignItems: 'center'
         }}>
-          <span>SmartFlow Network</span>
-          <div style={{ width: '60px', height: '14px', borderRadius: '7px', background: 'var(--text-secondary)', opacity: 0.15 }}></div>
-          <span>12:00 PM</span>
-        </div>
-
-        {/* Application Header */}
-        <header style={{
-          padding: '16px 20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          borderBottom: '1px solid var(--card-border)',
-          background: 'rgba(255, 255, 255, 0.02)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Logo Brand */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
-              width: '10px',
-              height: '10px',
-              borderRadius: '50%',
-              background: 'var(--color-accent)'
-            }} className="animate-pulse-soft"></div>
-            <h1 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-              Smart Flow
-            </h1>
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              background: 'var(--color-accent-light)',
+              color: 'var(--color-accent)'
+            }}>
+              <Landmark size={20} />
+            </div>
+            <div>
+              <h1 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                SmartFlow <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--color-secondary)', padding: '1px 6px', background: 'var(--color-secondary-light)', borderRadius: '4px' }}>Bank Portal</span>
+              </h1>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* User details when logged in */}
+          {/* Nav Controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {user && (
-              <span className="badge primary" style={{ fontSize: '0.65rem', textTransform: 'capitalize' }}>
-                {user.role}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginRight: '8px' }}>
+                {/* User Info Badge */}
+                <div className="glass-panel" style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 14px',
+                  borderRadius: '10px',
+                  boxShadow: 'none',
+                  fontSize: '0.85rem'
+                }}>
+                  {user.role === 'manager' && <Shield size={14} style={{ color: 'var(--color-secondary)' }} />}
+                  {user.role === 'security' && <Shield size={14} style={{ color: 'var(--color-accent)' }} />}
+                  {user.role === 'customer' && <User size={14} style={{ color: 'var(--color-accent)' }} />}
+                  <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{user.name}</span>
+                  <span className={`badge ${user.role === 'manager' ? 'secondary' : 'primary'}`} style={{ fontSize: '0.6rem', padding: '2px 6px' }}>
+                    {user.role === 'manager' ? 'Admin' : user.role}
+                  </span>
+                </div>
+              </div>
             )}
 
-            {/* Show Alerts count only to Security/Manager */}
-            {user && activeRole !== 'customer' && unreadAlerts > 0 && (
-              <div style={{ position: 'relative', color: 'var(--text-primary)', display: 'flex', alignItems: 'center' }}>
-                <Bell size={18} />
+            {/* Notification Bell (Only for Staff roles) */}
+            {user && user.role !== 'customer' && unreadAlerts > 0 && (
+              <div style={{ position: 'relative', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                <Bell size={20} />
                 <span style={{
                   position: 'absolute',
-                  top: '-5px',
-                  right: '-5px',
+                  top: '-4px',
+                  right: '-4px',
                   background: 'var(--color-danger)',
                   color: 'white',
-                  fontSize: '0.6rem',
+                  fontSize: '0.65rem',
                   fontWeight: '700',
                   borderRadius: '50%',
-                  width: '14px',
-                  height: '14px',
+                  width: '15px',
+                  height: '15px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -145,78 +102,75 @@ function AppContent() {
               </div>
             )}
 
+            {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
+              className="glass-button"
               style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-primary)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                padding: '4px'
+                width: '38px',
+                height: '38px',
+                padding: 0,
+                borderRadius: '10px',
+                border: '1px solid var(--card-border)'
               }}
-              title="Toggle Theme"
+              title="Toggle Light/Dark Theme"
             >
               {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
 
-            {/* Logout button */}
+            {/* Sign Out Action */}
             {user && (
               <button
                 onClick={logoutUser}
+                className="glass-button secondary"
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--color-danger)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '4px'
+                  height: '38px',
+                  padding: '0 16px',
+                  borderRadius: '10px'
                 }}
                 title="Sign Out"
               >
-                <LogOut size={18} />
+                <LogOut size={16} /> <span style={{ fontSize: '0.85rem' }}>Sign Out</span>
               </button>
             )}
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* App Main Body View Area */}
-        <main style={{
-          flex: 1,
-          overflowY: 'auto',
-          background: 'rgba(255, 255, 255, 0.01)',
-          paddingBottom: '20px'
+      {/* Main Website Content Area */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div className="container animate-fade-in" style={{
+          marginTop: '32px',
+          paddingBottom: '48px',
+          width: '100%',
+          flex: 1
         }}>
           {user ? (
             <>
-              {activeRole === 'customer' && <CustomerView />}
-              {activeRole === 'security' && <SecurityView />}
-              {activeRole === 'manager' && <ManagerView />}
+              {user.role === 'customer' && <CustomerView />}
+              {user.role === 'security' && <SecurityView />}
+              {user.role === 'manager' && <ManagerView />}
             </>
           ) : (
             <AuthView />
           )}
-        </main>
-
-        {/* Mobile Device Home Bar cutout */}
-        <div style={{
-          height: '16px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingBottom: '6px'
-        }}>
-          <div style={{
-            width: '120px',
-            height: '4px',
-            borderRadius: '2px',
-            background: 'var(--text-secondary)',
-            opacity: 0.3
-          }}></div>
         </div>
-      </div>
+      </main>
+
+      {/* Modern Homely Footer */}
+      <footer style={{
+        marginTop: 'auto',
+        borderTop: '1px solid var(--card-border)',
+        padding: '24px 0',
+        textAlign: 'center',
+        background: 'rgba(32, 84, 70, 0.02)'
+      }}>
+        <div className="container">
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+            © {new Date().getFullYear()} SmartFlow Bank Queue Optimizer • Branch Operations Portal • Accra, Ghana
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
