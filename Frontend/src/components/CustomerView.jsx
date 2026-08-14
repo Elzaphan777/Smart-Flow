@@ -344,11 +344,16 @@ export default function CustomerView() {
               {/* Ticket side cutouts */}
               <div className="ticket-cutout-left" />
               <div className="ticket-cutout-right" />
-
               <div style={{ textAlign: 'center', paddingBottom: '12px' }}>
-                <span className={`badge ${activeTicket.isVip ? 'secondary' : 'primary'}`} style={{ marginBottom: '12px' }}>
-                  {activeTicket.isVip ? '⭐ Priority Guest' : 'Standard Check-In'}
-                </span>
+                {activeTicket.status === 'checked_in' ? (
+                  <span className={`badge ${activeTicket.isVip ? 'secondary' : 'primary'}`} style={{ marginBottom: '12px' }}>
+                    {activeTicket.isVip ? '⭐ Priority Guest' : 'Standard Check-In'}
+                  </span>
+                ) : (
+                  <span className="badge warning animate-pulse-soft" style={{ marginBottom: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <AlertTriangle size={14} style={{ color: 'var(--color-highlight)' }} /> Being Served
+                  </span>
+                )}
                 <p style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)', fontWeight: '700' }}>
                   {activeTicket.bank}
                 </p>
