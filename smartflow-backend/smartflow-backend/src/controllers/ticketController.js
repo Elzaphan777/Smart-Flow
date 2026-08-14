@@ -164,36 +164,10 @@ exports.completeTicket = async (req, res, next) => {
       });
     }
 
-    // Check if there's a waiting ticket for this teller's services
-    const nextTicket = await Ticket.findOne({
-      status: TICKET_STATUS.WAITING,
-      serviceType: { $in: req.teller.specializations },
-    }).sort({ priority: -1, 'timing.issuedAt': 1 }); // priority first, then FIFO
-
-    if (nextTicket) {
-      nextTicket.assignedTeller = req.teller._id;
-      nextTicket.status = TICKET_STATUS.ASSIGNED;
-      nextTicket.timing.assignedAt = new Date();
-      await nextTicket.save();
-
-      req.teller.isAvailable = false;
-      req.teller.currentTicket = nextTicket._id;
-      await req.teller.save();
-
-      if (io) {
-        io.to(`teller_${req.teller._id}`).emit('new_ticket', { ticket: nextTicket });
-        io.to('displays').emit('ticket_assigned', {
-          ticketNumber: nextTicket.ticketNumber,
-          windowNumber: req.teller.windowNumber,
-          tellerName: `Station ${req.teller.windowNumber}`,
-        });
-      }
-    } else {
-      // No waiting ticket — teller is free
-      req.teller.isAvailable = true;
-      req.teller.currentTicket = null;
-      await req.teller.save();
-    }
+    // No auto-assignment — teller is free and ready to be reassigned manually or by new check-ins
+    req.teller.isAvailable = true;
+    req.teller.currentTicket = null;
+    await req.teller.save();
 
     if (io) {
       io.to('managers').emit('queue_update', { type: 'ticket_completed' });

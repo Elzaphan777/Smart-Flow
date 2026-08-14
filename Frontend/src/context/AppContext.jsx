@@ -215,6 +215,16 @@ export const AppProvider = ({ children }) => {
         message: `Ticket ${data.ticketNumber} transaction completed at Station ${data.windowNumber}.`,
         type: 'served'
       });
+      setActiveTicket(prev => {
+        if (prev && prev.ticketNumber === data.ticketNumber) {
+          return { 
+            ...prev, 
+            status: 'completed', 
+            assignedTellerWindow: data.windowNumber 
+          };
+        }
+        return prev;
+      });
       refreshQueueAndSnapshot();
     });
 

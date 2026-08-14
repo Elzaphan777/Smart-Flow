@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Ticket, User, Phone, Building, Layers, CheckCircle, Clock, AlertTriangle, ArrowRight, MapPin, Landmark, HeartHandshake, ShieldCheck } from 'lucide-react';
 
@@ -70,6 +70,18 @@ export default function CustomerView() {
     isVip: false
   });
   const [error, setError] = useState('');
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  useEffect(() => {
+    if (activeTicket && activeTicket.status === 'completed') {
+      const timer = setTimeout(() => {
+        setShowFeedback(true);
+      }, 4000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowFeedback(false);
+    }
+  }, [activeTicket]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -363,7 +375,7 @@ export default function CustomerView() {
             </form>
           </div>
         </div>
-      ) : activeTicket.status === 'completed' ? (
+      ) : (activeTicket.status === 'completed' && showFeedback) ? (
         <div style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '24px 0' }}>
           <TellerReviewForm activeTicket={activeTicket} />
         </div>
@@ -382,6 +394,10 @@ export default function CustomerView() {
                 {activeTicket.status === 'checked_in' ? (
                   <span className={`badge ${activeTicket.isVip ? 'secondary' : 'primary'}`} style={{ marginBottom: '12px' }}>
                     {activeTicket.isVip ? '⭐ Priority Guest' : 'Standard Check-In'}
+                  </span>
+                ) : activeTicket.status === 'completed' ? (
+                  <span className="badge success" style={{ marginBottom: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <CheckCircle size={14} /> Served
                   </span>
                 ) : (
                   <span className="badge warning animate-pulse-soft" style={{ marginBottom: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -470,6 +486,44 @@ export default function CustomerView() {
                         <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{handlingStationsStr}</span>
                       </div>
                     )}
+                  </div>
+                </div>
+              ) : activeTicket.status === 'completed' ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '14px',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  background: 'rgba(32, 84, 70, 0.06)',
+                  border: '1px solid rgba(32, 84, 70, 0.15)',
+                  color: 'var(--color-accent)',
+                  marginBottom: '20px'
+                }}>
+                  <CheckCircle size={26} style={{ marginTop: '2px' }} />
+                  <div style={{ width: '100%' }}>
+                    <h4 style={{ fontSize: '1rem', fontWeight: '700' }}>Transaction Completed!</h4>
+                    <p style={{ fontSize: '0.85rem', opacity: '0.85', marginTop: '4px', lineHeight: '1.4' }}>
+                      Thank you for banking with us. Your service at Station {activeTicket.assignedTellerWindow} is complete.
+                    </p>
+                    <button
+                      onClick={() => setShowFeedback(true)}
+                      className="glass-button primary"
+                      style={{
+                        marginTop: '12px',
+                        width: '100%',
+                        height: '36px',
+                        borderRadius: '8px',
+                        fontSize: '0.8rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <span>Rate Station Now</span>
+                      <ArrowRight size={14} />
+                    </button>
                   </div>
                 </div>
               ) : (
