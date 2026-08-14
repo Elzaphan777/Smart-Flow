@@ -98,22 +98,24 @@ export default function ManagerView() {
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {counters.map(counter => (
-              <div key={counter.id} className="glass-panel" style={{
-                padding: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px',
-                borderLeft: counter.isOpen ? '5px solid var(--color-accent)' : '5px solid var(--text-secondary)'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-                  <div>
-                    <h4 style={{ fontSize: '1.05rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
-                      {counter.name}
-                      <span className={`badge ${counter.isOpen ? 'success' : 'danger'}`} style={{ fontSize: '0.6rem', padding: '2px 8px' }}>
-                        {counter.isOpen ? 'Open' : 'Closed'}
-                      </span>
-                    </h4>
+            {counters.map(counter => {
+              const isFree = counter.isOpen && counter.isAvailable;
+              return (
+                <div key={counter.id} className="glass-panel" style={{
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
+                  borderLeft: isFree ? '5px solid var(--color-accent)' : '5px solid var(--text-secondary)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                    <div>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+                        {counter.name}
+                        <span className={`badge ${isFree ? 'success' : 'danger'}`} style={{ fontSize: '0.6rem', padding: '2px 8px' }}>
+                          {isFree ? 'Online' : 'Offline'}
+                        </span>
+                      </h4>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
                       Window {counter.windowNumber} • Specialties: <strong>{counter.type}</strong>
                     </p>
@@ -206,7 +208,8 @@ export default function ManagerView() {
                   </div>
                 )}
               </div>
-            ))}
+            );
+          })}
           </div>
         </div>
 

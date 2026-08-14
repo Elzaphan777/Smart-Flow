@@ -127,48 +127,51 @@ export default function TellerView() {
         </div>
 
         <div className="grid-2" style={{ maxWidth: '900px', margin: '0 auto', gap: '20px' }}>
-          {tellersList.map(teller => (
-            <div 
-              key={teller.id} 
-              className="glass-panel interactive" 
-              onClick={() => handleSelectTeller(teller.staffId)}
-              style={{
-                padding: '24px',
-                cursor: 'pointer',
-                borderLeft: teller.isOpen ? '5px solid var(--color-accent)' : '5px solid var(--text-secondary)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}
-            >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <h4 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                    {teller.name.split(' (')[0]}
-                  </h4>
-                  <span className={`badge ${teller.isOpen ? 'success' : 'danger'}`} style={{ fontSize: '0.6rem', padding: '2px 6px' }}>
-                    {teller.isOpen ? 'Online' : 'Offline'}
-                  </span>
-                </div>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                  Window {teller.windowNumber} • Staff ID: <strong>{teller.staffId}</strong>
-                </p>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', opacity: 0.9 }}>
-                  Specialties: <em>{teller.type}</em>
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Queue Size</p>
-                  <p style={{ fontSize: '1.5rem', fontWeight: '800', color: teller.isOpen ? 'var(--color-accent)' : 'var(--text-secondary)' }}>
-                    {teller.isOpen ? teller.customers.length : '--'}
+          {tellersList.map(teller => {
+            const isFree = teller.isOpen && teller.isAvailable;
+            return (
+              <div 
+                key={teller.id} 
+                className="glass-panel interactive" 
+                onClick={() => handleSelectTeller(teller.staffId)}
+                style={{
+                  padding: '24px',
+                  cursor: 'pointer',
+                  borderLeft: isFree ? '5px solid var(--color-accent)' : '5px solid var(--text-secondary)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <h4 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                      {teller.name.split(' (')[0]}
+                    </h4>
+                    <span className={`badge ${isFree ? 'success' : 'danger'}`} style={{ fontSize: '0.6rem', padding: '2px 6px' }}>
+                      {isFree ? 'Online' : 'Offline'}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                    Window {teller.windowNumber} • Staff ID: <strong>{teller.staffId}</strong>
+                  </p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', opacity: 0.9 }}>
+                    Specialties: <em>{teller.type}</em>
                   </p>
                 </div>
-                <ChevronRight size={20} style={{ color: 'var(--text-secondary)' }} />
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Queue Size</p>
+                    <p style={{ fontSize: '1.5rem', fontWeight: '800', color: isFree ? 'var(--color-accent)' : 'var(--text-secondary)' }}>
+                      {isFree ? teller.customers.length : '--'}
+                    </p>
+                  </div>
+                  <ChevronRight size={20} style={{ color: 'var(--text-secondary)' }} />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
@@ -195,8 +198,11 @@ export default function TellerView() {
       <div className="glass-panel" style={{ padding: '24px 30px', display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <span className="badge primary" style={{ marginBottom: '6px' }}>Window Terminal</span>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+          <h2 style={{ fontSize: '1.6rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
             Window {currentCounter.windowNumber} — {user.name}
+            <span className={`badge ${(currentCounter.isOpen && currentCounter.isAvailable) ? 'success' : 'danger'}`} style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
+              {(currentCounter.isOpen && currentCounter.isAvailable) ? 'Online' : 'Offline'}
+            </span>
           </h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
             Desk Specialties: <strong>{currentCounter.type}</strong>
