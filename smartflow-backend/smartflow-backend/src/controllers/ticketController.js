@@ -187,6 +187,7 @@ exports.completeTicket = async (req, res, next) => {
 
     if (io) {
       io.to('managers').emit('queue_update', { type: 'ticket_completed' });
+      io.to('displays').emit('queue_update', { type: 'ticket_completed' });
     }
 
     res.status(200).json({ success: true, message: 'Ticket completed.', data: ticket });
@@ -214,7 +215,10 @@ exports.cancelTicket = async (req, res, next) => {
     }
 
     const io = req.app.get('io');
-    if (io) io.to('managers').emit('queue_update', { type: 'ticket_cancelled' });
+    if (io) {
+      io.to('managers').emit('queue_update', { type: 'ticket_cancelled' });
+      io.to('displays').emit('queue_update', { type: 'ticket_cancelled' });
+    }
 
     res.status(200).json({ success: true, message: 'Ticket cancelled.' });
   } catch (err) {
@@ -249,6 +253,8 @@ exports.transferTicket = async (req, res, next) => {
         windowNumber: targetTeller.windowNumber,
         tellerName: targetTeller.name,
       });
+      io.to('managers').emit('queue_update', { type: 'ticket_transferred' });
+      io.to('displays').emit('queue_update', { type: 'ticket_transferred' });
     }
 
     res.status(200).json({ success: true, message: 'Ticket transferred.', data: ticket });

@@ -681,6 +681,36 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // Teller specific action: Approve and direct ticket to himself
+  const approveAndDirectTicket = async (staffId, ticketId) => {
+    try {
+      const token = await getAuthToken(staffId);
+      if (!token) return { success: false, message: 'Authentication failed for teller.' };
+
+      // Find the teller object in counters to get their Mongo _id
+      const tellerCounter = counters.find(c => c.staffId === staffId);
+      if (!tellerCounter) return { success: false, message: 'Teller station profile not found.' };
+
+      const res = await fetch(`${API_BASE}/tickets/${ticketId}/transfer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ toTellerId: tellerCounter.id, reason: 'Self-assignment' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        refreshQueueAndSnapshot();
+        return { success: true, data: data.data };
+      }
+      return { success: false, message: data.message || 'Failed to assign ticket.' };
+    } catch (err) {
+      console.error('Error in self-assignment:', err);
+      return { success: false, message: 'Network error in self-assignment.' };
+    }
+  };
+
   const logoutUser = () => {
     setUser(null);
     setActiveTicket(null);
@@ -714,7 +744,8 @@ export const AppProvider = ({ children }) => {
       resetSimulator,
       callTicket,
       completeTicket,
-      toggleTellerAvailability
+      toggleTellerAvailability,
+      approveAndDirectTicket
     }}>
       {children}
     </AppContext.Provider>

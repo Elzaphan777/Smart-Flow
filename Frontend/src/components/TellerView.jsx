@@ -23,7 +23,9 @@ export default function TellerView() {
     callTicket, 
     completeTicket, 
     toggleTellerAvailability, 
-    toggleCounterStatus 
+    toggleCounterStatus,
+    approveAndDirectTicket,
+    checkIns
   } = useApp();
 
   const [notes, setNotes] = useState('');
@@ -46,6 +48,20 @@ export default function TellerView() {
     setError('');
     setSuccess('');
     loginUser(staffId, 'Teller@1234');
+  };
+
+  const handleApproveAndDirect = async (ticketId) => {
+    if (!currentCounter) return;
+    setLoading(true);
+    setError('');
+    const res = await approveAndDirectTicket(user.staffId, ticketId);
+    setLoading(false);
+    if (res.success) {
+      setSuccess('Ticket directed to your window queue!');
+      setTimeout(() => setSuccess(''), 3000);
+    } else {
+      setError(res.message);
+    }
   };
 
   const handleToggleAvailability = async () => {
@@ -434,6 +450,54 @@ export default function TellerView() {
               ))
             )}
           </div>
+
+          {/* Available Tickets in Branch Panel (Self-Assignment) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '24px' }}>
+            <h3 style={{ fontSize: '1.15rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
+              <UserCheck size={20} style={{ color: 'var(--color-accent)' }} /> Available Tickets in Branch
+            </h3>
+
+            <div className="glass-panel" style={{ padding: '24px', maxHeight: '350px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--card-bg)', boxShadow: 'none' }}>
+              {checkIns.filter(t => t.status === 'checked_in').length === 0 ? (
+                <div style={{ padding: '30px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  <p style={{ fontSize: '0.85rem', fontStyle: 'italic' }}>No unassigned lobby tickets available.</p>
+                </div>
+              ) : (
+                checkIns.filter(t => t.status === 'checked_in').map((t, idx, arr) => (
+                  <div key={t.id} style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingBottom: '12px',
+                    borderBottom: idx < arr.length - 1 ? '1px solid var(--card-border)' : 'none',
+                    fontSize: '0.85rem'
+                  }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontWeight: '800', color: 'var(--color-secondary)' }}>{t.ticketNumber}</span>
+                        {t.isVip && (
+                          <span className="badge secondary" style={{ fontSize: '0.55rem', padding: '1px 6px' }}>⭐ VIP</span>
+                        )}
+                        <span className="badge primary" style={{ fontSize: '0.6rem', padding: '1px 6px' }}>{t.purpose}</span>
+                      </div>
+                      <p style={{ color: 'var(--text-primary)', marginTop: '4px', fontWeight: '600' }}>{t.name}</p>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '2px' }}>Check-in: {t.checkInTime} • Bank: {t.bank}</p>
+                    </div>
+
+                    <button
+                      onClick={() => handleApproveAndDirect(t.id)}
+                      disabled={loading || !currentCounter.isAvailable || !currentCounter.isOpen}
+                      className="glass-button primary"
+                      style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', height: '32px' }}
+                    >
+                      Approve & Direct
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
         </div>
       </div>
 
