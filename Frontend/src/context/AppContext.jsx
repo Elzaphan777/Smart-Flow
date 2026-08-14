@@ -607,6 +607,80 @@ export const AppProvider = ({ children }) => {
     return { success: true };
   };
 
+  // Teller specific action: Call ticket
+  const callTicket = async (staffId, ticketId) => {
+    try {
+      const token = await getAuthToken(staffId);
+      if (!token) return { success: false, message: 'Authentication failed for teller.' };
+
+      const res = await fetch(`${API_BASE}/tickets/${ticketId}/call`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        refreshQueueAndSnapshot();
+        return { success: true, data: data.data };
+      }
+      return { success: false, message: data.message || 'Failed to call ticket.' };
+    } catch (err) {
+      console.error('Error calling ticket:', err);
+      return { success: false, message: 'Network error calling ticket.' };
+    }
+  };
+
+  // Teller specific action: Complete ticket
+  const completeTicket = async (staffId, ticketId, notes) => {
+    try {
+      const token = await getAuthToken(staffId);
+      if (!token) return { success: false, message: 'Authentication failed for teller.' };
+
+      const res = await fetch(`${API_BASE}/tickets/${ticketId}/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ notes })
+      });
+      const data = await res.json();
+      if (data.success) {
+        refreshQueueAndSnapshot();
+        return { success: true, data: data.data };
+      }
+      return { success: false, message: data.message || 'Failed to complete ticket.' };
+    } catch (err) {
+      console.error('Error completing ticket:', err);
+      return { success: false, message: 'Network error completing ticket.' };
+    }
+  };
+
+  // Teller specific action: Toggle availability
+  const toggleTellerAvailability = async (staffId, isAvailable) => {
+    try {
+      const token = await getAuthToken(staffId);
+      if (!token) return { success: false, message: 'Authentication failed for teller.' };
+
+      const res = await fetch(`${API_BASE}/tellers/availability`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isAvailable })
+      });
+      const data = await res.json();
+      if (data.success) {
+        refreshQueueAndSnapshot();
+        return { success: true, data: data.data };
+      }
+      return { success: false, message: data.message || 'Failed to toggle availability.' };
+    } catch (err) {
+      console.error('Error toggling availability:', err);
+      return { success: false, message: 'Network error toggling availability.' };
+    }
+  };
+
   const logoutUser = () => {
     setUser(null);
     setActiveTicket(null);
@@ -637,7 +711,10 @@ export const AppProvider = ({ children }) => {
       serveCustomer,
       toggleCounterStatus,
       clearNotifications,
-      resetSimulator
+      resetSimulator,
+      callTicket,
+      completeTicket,
+      toggleTellerAvailability
     }}>
       {children}
     </AppContext.Provider>
