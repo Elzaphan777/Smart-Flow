@@ -83,7 +83,7 @@ const seed = async () => {
   } catch (err) {
     console.error('❌ Seed failed:', err.message);
   } finally {
-    mongoose.disconnect();
+    await mongoose.disconnect();
     console.log('Database disconnected.');
   }
 };
