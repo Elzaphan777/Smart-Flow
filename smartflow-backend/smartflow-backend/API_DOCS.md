@@ -1,6 +1,6 @@
 # SmartFlow Backend — API Documentation
 
-> Base URL: `http://https://smart-flow-9bny.onrender.com/api`  
+> Base URL: `https://smart-flow-9bny.onrender.com/api`  
 > Real-time: WebSocket via `socket.io` on the same host/port
 
 ---
@@ -311,7 +311,7 @@ Full daily analytics:
 Connect with `socket.io-client`:
 ```js
 import { io } from 'socket.io-client';
-const socket = io('http://https://smart-flow-9bny.onrender.com');
+const socket = io('https://smart-flow-9bny.onrender.com');
 ```
 
 ### Joining Rooms

@@ -5,8 +5,8 @@ const AppContext = createContext();
 
 export const useApp = () => useContext(AppContext);
 
-const API_BASE = 'http://https://smart-flow-9bny.onrender.com/api';
-const SOCKET_BASE = 'http://https://smart-flow-9bny.onrender.com';
+const API_BASE = 'https://smart-flow-9bny.onrender.com/api';
+const SOCKET_BASE = 'https://smart-flow-9bny.onrender.com';
 
 const PURPOSE_TO_SERVICE = {
   'Cash Deposits': 'deposits',
