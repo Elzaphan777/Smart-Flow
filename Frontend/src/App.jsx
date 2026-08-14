@@ -13,10 +13,16 @@ function AppContent() {
   const [currentPortal, setCurrentPortal] = useState(() => {
     const savedUser = localStorage.getItem('smartflow-user');
     if (savedUser) {
-      const parsed = JSON.parse(savedUser);
-      if (parsed.role === 'customer') return 'customer';
-      if (parsed.role === 'security') return 'teller';
-      if (parsed.role === 'manager') return 'admin';
+      try {
+        const parsed = JSON.parse(savedUser);
+        if (parsed) {
+          if (parsed.role === 'customer') return 'customer';
+          if (parsed.role === 'security') return 'teller';
+          if (parsed.role === 'manager') return 'admin';
+        }
+      } catch (e) {
+        console.error('Error parsing saved user:', e);
+      }
     }
     return 'home';
   });
