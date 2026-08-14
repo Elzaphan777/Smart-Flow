@@ -13,7 +13,8 @@ import {
   ShieldCheck, 
   Power,
   ChevronRight,
-  Bell
+  Bell,
+  Landmark
 } from 'lucide-react';
 
 export default function TellerView() {
@@ -27,13 +28,15 @@ export default function TellerView() {
     toggleCounterStatus,
     approveAndDirectTicket,
     checkIns,
-    signalTellerFreedom
+    signalTellerFreedom,
+    serveCustomer
   } = useApp();
 
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('terminal');
 
   // Filter tellers from counters (excluding the manager TLR001)
   const tellersList = counters.filter(c => c.staffId !== 'TLR001');
@@ -290,6 +293,55 @@ export default function TellerView() {
         </div>
       </div>
 
+      {/* Tab Switcher */}
+      <div style={{
+        display: 'flex',
+        borderBottom: '1px solid var(--card-border)',
+        gap: '24px',
+        margin: '16px 0 8px 0'
+      }}>
+        <button
+          onClick={() => setActiveTab('terminal')}
+          style={{
+            background: 'none',
+            border: 'none',
+            borderBottom: activeTab === 'terminal' ? '3px solid var(--color-accent)' : '3px solid transparent',
+            color: activeTab === 'terminal' ? 'var(--color-accent)' : 'var(--text-secondary)',
+            padding: '10px 4px',
+            fontSize: '0.95rem',
+            fontWeight: '700',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <UserCheck size={16} />
+          <span>My Terminal</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('admin')}
+          style={{
+            background: 'none',
+            border: 'none',
+            borderBottom: activeTab === 'admin' ? '3px solid var(--color-accent)' : '3px solid transparent',
+            color: activeTab === 'admin' ? 'var(--color-accent)' : 'var(--text-secondary)',
+            padding: '10px 4px',
+            fontSize: '0.95rem',
+            fontWeight: '700',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <Landmark size={16} />
+          <span>Station Administration</span>
+        </button>
+      </div>
+
       {error && (
         <div className="glass-panel" style={{
           padding: '14px 20px',
@@ -322,229 +374,335 @@ export default function TellerView() {
         </div>
       )}
 
-      {/* Main split grid */}
-      <div className="grid-2">
-        {/* Left Column: Serving Panel */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <h3 style={{ fontSize: '1.15rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
-            <UserCheck size={20} style={{ color: 'var(--color-accent)' }} /> Customer Service Action
-          </h3>
+      {activeTab === 'terminal' ? (
+        /* Main split grid */
+        <div className="grid-2">
+          {/* Left Column: Serving Panel */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h3 style={{ fontSize: '1.15rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
+              <UserCheck size={20} style={{ color: 'var(--color-accent)' }} /> Customer Service Action
+            </h3>
 
-          {!currentCounter.isOpen ? (
-            <div className="glass-panel" style={{ padding: '48px 30px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-              <Power size={48} style={{ opacity: 0.3, marginBottom: '14px' }} />
-              <h4 style={{ color: 'var(--text-primary)', fontWeight: '700' }}>Station is Closed</h4>
-              <p style={{ fontSize: '0.85rem', marginTop: '6px' }}>
-                Open this station using the power button in the top right to start serving queue arrivals.
-              </p>
-            </div>
-          ) : servingCustomer ? (
-            <div className="glass-panel" style={{ padding: '30px', background: 'var(--card-bg)' }}>
-              <div style={{ display: 'flex', justifycontent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                <div>
-                  <span className="badge secondary" style={{ marginBottom: '8px' }}>Active Service</span>
-                  <h4 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--color-secondary)' }}>
-                    {servingCustomer.ticketNumber}
-                  </h4>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginTop: '4px', color: 'var(--text-primary)' }}>
-                    {servingCustomer.name}
-                  </h3>
+            {!currentCounter.isOpen ? (
+              <div className="glass-panel" style={{ padding: '48px 30px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <Power size={48} style={{ opacity: 0.3, marginBottom: '14px' }} />
+                <h4 style={{ color: 'var(--text-primary)', fontWeight: '700' }}>Station is Closed</h4>
+                <p style={{ fontSize: '0.85rem', marginTop: '6px' }}>
+                  Open this station using the power button in the top right to start serving queue arrivals.
+                </p>
+              </div>
+            ) : servingCustomer ? (
+              <div className="glass-panel" style={{ padding: '30px', background: 'var(--card-bg)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                  <div>
+                    <span className="badge secondary" style={{ marginBottom: '8px' }}>Active Service</span>
+                    <h4 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--color-secondary)' }}>
+                      {servingCustomer.ticketNumber}
+                    </h4>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginTop: '4px', color: 'var(--text-primary)' }}>
+                      {servingCustomer.name}
+                    </h3>
+                  </div>
                 </div>
-                <div style={{
+
+                <div style={{ 
+                  borderTop: '1px solid var(--card-border)', 
+                  borderBottom: '1px solid var(--card-border)', 
+                  padding: '16px 0', 
+                  marginBottom: '20px', 
+                  fontSize: '0.85rem',
+                  color: 'var(--text-secondary)',
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}>
+                  <p>Service Type: <strong style={{ color: 'var(--text-primary)' }}>{servingCustomer.purpose}</strong></p>
+                  <p>Origin: <strong style={{ color: 'var(--text-primary)' }}>{servingCustomer.bank || 'GCB Bank'}</strong></p>
+                </div>
+
+                {/* Service Completion Notes Form */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                      Service Notes / Resolution Details
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <FileText size={18} style={{ position: 'absolute', left: '14px', top: '13px', color: 'var(--text-secondary)' }} />
+                      <input
+                        type="text"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="e.g. Cleared foreign exchange draft, converted USD to GHS."
+                        className="glass-input"
+                        style={{ paddingLeft: '44px', height: '46px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleComplete(servingCustomer.id)}
+                    disabled={loading}
+                    className="glass-button primary"
+                    style={{ width: '100%', height: '46px', borderRadius: '12px', fontSize: '0.95rem' }}
+                  >
+                    <CheckCircle size={18} /> Complete & Free Station
+                  </button>
+                </div>
+              </div>
+            ) : waitingCustomers.length > 0 ? (
+              <div className="glass-panel" style={{ padding: '30px', textAlign: 'center' }}>
+                <div style={{
+                  display: 'inline-flex',
+                  padding: '16px',
+                  borderRadius: '50%',
                   background: 'var(--color-accent-light)',
                   color: 'var(--color-accent)',
-                  padding: '6px 12px',
-                  borderRadius: '10px',
-                  fontSize: '0.8rem',
-                  fontWeight: '600'
+                  marginBottom: '16px'
                 }}>
-                  <Clock size={14} className="animate-spin-slow" />
-                  <span>Serving Live</span>
+                  <Users size={32} />
                 </div>
-              </div>
-
-              <div style={{ 
-                borderTop: '1px solid var(--card-border)', 
-                borderBottom: '1px solid var(--card-border)', 
-                padding: '16px 0', 
-                marginBottom: '20px', 
-                fontSize: '0.85rem',
-                color: 'var(--text-secondary)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px'
-              }}>
-                <p>Service Type: <strong style={{ color: 'var(--text-primary)' }}>{servingCustomer.purpose}</strong></p>
-                <p>Origin: <strong style={{ color: 'var(--text-primary)' }}>{servingCustomer.bank || 'GCB Bank'}</strong></p>
-              </div>
-
-              {/* Service Completion Notes Form */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                    Service Notes / Resolution Details
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <FileText size={18} style={{ position: 'absolute', left: '14px', top: '13px', color: 'var(--text-secondary)' }} />
-                    <input
-                      type="text"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="e.g. Cleared foreign exchange draft, converted USD to GHS."
-                      className="glass-input"
-                      style={{ paddingLeft: '44px', height: '46px' }}
-                    />
-                  </div>
-                </div>
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>Customer Ready in Queue</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '6px', maxWidth: '300px', margin: '6px auto 20px auto' }}>
+                  Next customer in line: <strong>{waitingCustomers[0].ticketNumber}</strong> ({waitingCustomers[0].name}). Call them to your station to begin service.
+                </p>
 
                 <button
-                  onClick={() => handleComplete(servingCustomer.id)}
-                  disabled={loading}
-                  className="glass-button primary"
+                  onClick={() => handleCall(waitingCustomers[0].id)}
+                  disabled={loading || !currentCounter.isAvailable}
+                  className="glass-button primary animate-pulse-soft"
                   style={{ width: '100%', height: '46px', borderRadius: '12px', fontSize: '0.95rem' }}
                 >
-                  <CheckCircle size={18} /> Complete & Free Station
+                  <Play size={18} /> Call & Serve Next Guest
                 </button>
-              </div>
-            </div>
-          ) : waitingCustomers.length > 0 ? (
-            <div className="glass-panel" style={{ padding: '30px', textAlign: 'center' }}>
-              <div style={{
-                display: 'inline-flex',
-                padding: '16px',
-                borderRadius: '50%',
-                background: 'var(--color-accent-light)',
-                color: 'var(--color-accent)',
-                marginBottom: '16px'
-              }}>
-                <Users size={32} />
-              </div>
-              <h3 style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>Customer Ready in Queue</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '6px', maxWidth: '300px', margin: '6px auto 20px auto' }}>
-                Next customer in line: <strong>{waitingCustomers[0].ticketNumber}</strong> ({waitingCustomers[0].name}). Call them to your station to begin service.
-              </p>
-
-              <button
-                onClick={() => handleCall(waitingCustomers[0].id)}
-                disabled={loading || !currentCounter.isAvailable}
-                className="glass-button primary animate-pulse-soft"
-                style={{ width: '100%', height: '46px', borderRadius: '12px', fontSize: '0.95rem' }}
-              >
-                <Play size={18} /> Call & Serve Next Guest
-              </button>
-              
-              {!currentCounter.isAvailable && (
-                <p style={{ fontSize: '0.75rem', color: 'var(--color-highlight)', marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                  <AlertTriangle size={12} /> Make yourself "Available" above to call the next guest.
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="glass-panel" style={{ padding: '48px 30px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-              <ShieldCheck size={48} style={{ opacity: 0.3, marginBottom: '14px', color: 'var(--color-accent)' }} />
-              <h4 style={{ color: 'var(--text-primary)', fontWeight: '700' }}>Lobby Queue Clear</h4>
-              <p style={{ fontSize: '0.85rem', marginTop: '6px' }}>
-                No customers are currently assigned to your station queue. Take a quick break or wait for security check-ins.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: Window Queue Backlog */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <h3 style={{ fontSize: '1.15rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
-            <Users size={20} style={{ color: 'var(--color-secondary)' }} /> Station Queue Backlog
-          </h3>
-
-          <div className="glass-panel" style={{ padding: '24px', maxHeight: '420px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--card-bg)' }}>
-            {waitingCustomers.length === 0 ? (
-              <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                <p style={{ fontSize: '0.85rem', fontStyle: 'italic' }}>No pending customers in backlog.</p>
+                
+                {!currentCounter.isAvailable && (
+                  <p style={{ fontSize: '0.75rem', color: 'var(--color-highlight)', marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    <AlertTriangle size={12} /> Make yourself "Available" above to call the next guest.
+                  </p>
+                )}
               </div>
             ) : (
-              waitingCustomers.map((cust, idx) => (
-                <div key={cust.id} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  paddingBottom: '12px',
-                  borderBottom: idx < waitingCustomers.length - 1 ? '1px solid var(--card-border)' : 'none',
-                  fontSize: '0.85rem'
-                }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: '800', color: 'var(--color-accent)' }}>{cust.ticketNumber}</span>
-                      <span className="badge primary" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>{cust.purpose}</span>
-                    </div>
-                    <p style={{ color: 'var(--text-primary)', marginTop: '4px', fontWeight: '600' }}>{cust.name}</p>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '2px' }}>Origin: {cust.bank}</p>
-                  </div>
-
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
-                      Position: #{idx + 1}
-                    </span>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                      Est: { (idx + 1) * 3 }m
-                    </p>
-                  </div>
-                </div>
-              ))
+              <div className="glass-panel" style={{ padding: '48px 30px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <ShieldCheck size={48} style={{ opacity: 0.3, marginBottom: '14px', color: 'var(--color-accent)' }} />
+                <h4 style={{ color: 'var(--text-primary)', fontWeight: '700' }}>Lobby Queue Clear</h4>
+                <p style={{ fontSize: '0.85rem', marginTop: '6px' }}>
+                  No customers are currently assigned to your station queue. Take a quick break or wait for security check-ins.
+                </p>
+              </div>
             )}
           </div>
 
-          {/* Available Tickets in Branch Panel (Self-Assignment) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '24px' }}>
+          {/* Right Column: Window Queue Backlog */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <h3 style={{ fontSize: '1.15rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
-              <UserCheck size={20} style={{ color: 'var(--color-accent)' }} /> Available Tickets in Branch
+              <Users size={20} style={{ color: 'var(--color-secondary)' }} /> Station Queue Backlog
             </h3>
 
             <div className="glass-panel" style={{ padding: '24px', maxHeight: '350px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--card-bg)', boxShadow: 'none' }}>
-              {checkIns.filter(t => t.status === 'checked_in').length === 0 ? (
+              {waitingCustomers.length === 0 ? (
                 <div style={{ padding: '30px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                  <p style={{ fontSize: '0.85rem', fontStyle: 'italic' }}>No unassigned lobby tickets available.</p>
+                  <p style={{ fontSize: '0.85rem', fontStyle: 'italic' }}>No pending customers in your backlog.</p>
                 </div>
               ) : (
-                checkIns.filter(t => t.status === 'checked_in').map((t, idx, arr) => (
-                  <div key={t.id} style={{
+                waitingCustomers.map((cust, idx) => (
+                  <div key={cust.id} style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     paddingBottom: '12px',
-                    borderBottom: idx < arr.length - 1 ? '1px solid var(--card-border)' : 'none',
-                    fontSize: '0.85rem'
+                    borderBottom: idx < waitingCustomers.length - 1 ? '1px solid var(--card-border)' : 'none'
                   }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontWeight: '800', color: 'var(--color-secondary)' }}>{t.ticketNumber}</span>
-                        {t.isVip && (
-                          <span className="badge secondary" style={{ fontSize: '0.55rem', padding: '1px 6px' }}>⭐ VIP</span>
-                        )}
-                        <span className="badge primary" style={{ fontSize: '0.6rem', padding: '1px 6px' }}>{t.purpose}</span>
+                        <span style={{ fontWeight: '800', color: 'var(--color-secondary)', fontSize: '0.9rem' }}>{cust.ticketNumber}</span>
+                        <span className="badge primary" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>{cust.purpose}</span>
                       </div>
-                      <p style={{ color: 'var(--text-primary)', marginTop: '4px', fontWeight: '600' }}>{t.name}</p>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '2px' }}>Check-in: {t.checkInTime} • Bank: {t.bank}</p>
+                      <p style={{ color: 'var(--text-primary)', marginTop: '4px', fontWeight: '600' }}>{cust.name}</p>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '2px' }}>Origin: {cust.bank}</p>
                     </div>
 
-                    <button
-                      onClick={() => handleApproveAndDirect(t.id)}
-                      disabled={loading || !currentCounter.isAvailable || !currentCounter.isOpen}
-                      className="glass-button primary"
-                      style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', height: '32px' }}
-                    >
-                      Approve & Direct
-                    </button>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
+                        Position: #{idx + 1}
+                      </span>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                        Est: { (idx + 1) * 3 }m
+                      </p>
+                    </div>
                   </div>
                 ))
               )}
             </div>
-          </div>
 
+            {/* Available Tickets in Branch Panel (Self-Assignment) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '24px' }}>
+              <h3 style={{ fontSize: '1.15rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
+                <UserCheck size={20} style={{ color: 'var(--color-accent)' }} /> Available Tickets in Branch
+              </h3>
+
+              <div className="glass-panel" style={{ padding: '24px', maxHeight: '350px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--card-bg)', boxShadow: 'none' }}>
+                {checkIns.filter(t => t.status === 'checked_in').length === 0 ? (
+                  <div style={{ padding: '30px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    <p style={{ fontSize: '0.85rem', fontStyle: 'italic' }}>No unassigned lobby tickets available.</p>
+                  </div>
+                ) : (
+                  checkIns.filter(t => t.status === 'checked_in').map((t, idx, arr) => (
+                    <div key={t.id} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      paddingBottom: '12px',
+                      borderBottom: idx < arr.length - 1 ? '1px solid var(--card-border)' : 'none',
+                      fontSize: '0.85rem'
+                    }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontWeight: '800', color: 'var(--color-secondary)' }}>{t.ticketNumber}</span>
+                          {t.isVip && (
+                            <span className="badge secondary" style={{ fontSize: '0.55rem', padding: '1px 6px' }}>⭐ VIP</span>
+                          )}
+                          <span className="badge primary" style={{ fontSize: '0.6rem', padding: '1px 6px' }}>{t.purpose}</span>
+                        </div>
+                        <p style={{ color: 'var(--text-primary)', marginTop: '4px', fontWeight: '600' }}>{t.name}</p>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '2px' }}>Check-in: {t.checkInTime} • Bank: {t.bank}</p>
+                      </div>
+
+                      <button
+                        onClick={() => handleApproveAndDirect(t.id)}
+                        disabled={loading || !currentCounter.isAvailable || !currentCounter.isOpen}
+                        className="glass-button primary"
+                        style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', height: '32px' }}
+                      >
+                        Approve & Direct
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Station Administration */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+          <h3 style={{ fontSize: '1.15rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
+            <Landmark size={20} style={{ color: 'var(--color-accent)' }} /> Station Administration
+          </h3>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {counters.map(counter => {
+              const isFree = counter.isOpen && counter.isAvailable;
+              return (
+                <div key={counter.id} className="glass-panel" style={{
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
+                  borderLeft: isFree ? '5px solid var(--color-accent)' : '5px solid var(--text-secondary)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                    <div>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+                        Station {counter.windowNumber}
+                        <span className={`badge ${isFree ? 'success' : 'danger'}`} style={{ fontSize: '0.6rem', padding: '2px 8px' }}>
+                          {isFree ? 'Online' : 'Offline'}
+                        </span>
+                      </h4>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                        Specialties: <strong>{counter.type}</strong>
+                      </p>
+                    </div>
+                    
+                    <button 
+                      onClick={() => toggleCounterStatus(counter.id)}
+                      className="glass-button"
+                      style={{
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        fontSize: '0.8rem',
+                        borderColor: counter.isOpen ? 'var(--color-danger)' : 'var(--color-accent)',
+                        color: counter.isOpen ? 'var(--color-danger)' : 'var(--color-accent)',
+                        background: counter.isOpen ? 'rgba(185, 28, 28, 0.03)' : 'rgba(32, 84, 70, 0.03)'
+                      }}
+                    >
+                      <Power size={14} />
+                      {counter.isOpen ? 'Close Station' : 'Open Station'}
+                    </button>
+                  </div>
+
+                  {counter.isOpen && (
+                    <div style={{ 
+                      borderTop: '1px solid var(--card-border)', 
+                      paddingTop: '16px', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: '12px' 
+                    }}>
+                      {counter.customers.length === 0 ? (
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', background: 'rgba(32, 84, 70, 0.02)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+                          No customers assigned to this station yet. Waiting for routing.
+                        </p>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            background: 'var(--color-accent-light)',
+                            padding: '14px 18px',
+                            borderRadius: '14px',
+                            border: '1px solid var(--card-border)'
+                          }}>
+                            <div>
+                              <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: '700', color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>
+                                NOW SERVING NEXT
+                              </span>
+                              <p style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--color-accent)', marginTop: '2px' }}>
+                                {counter.customers[0].ticketNumber}
+                              </p>
+                              <p style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                                {counter.customers[0].name}
+                              </p>
+                            </div>
+                            
+                            <button
+                              onClick={() => serveCustomer(counter.id, counter.customers[0].id)}
+                              className="glass-button primary"
+                              style={{ padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', height: '36px' }}
+                            >
+                              <Play size={14} /> Call & Serve
+                            </button>
+                          </div>
+
+                          {counter.customers.length > 1 && (
+                            <div style={{
+                              background: 'rgba(32, 84, 70, 0.02)',
+                              padding: '12px 16px',
+                              borderRadius: '12px'
+                            }}>
+                              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '6px' }}>
+                                Queue Backlog ({counter.customers.length - 1} pending):
+                              </p>
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                {counter.customers.slice(1).map(cust => (
+                                  <span key={cust.id} className="badge primary" style={{ fontSize: '0.65rem', padding: '2px 8px' }}>
+                                    {cust.ticketNumber} ({cust.name.split(' ')[0]})
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
     </div>
   );
