@@ -94,7 +94,7 @@ export default function ManagerView() {
         {/* Left Column: Teller Stations Administration */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
-            <Landmark size={20} style={{ color: 'var(--color-accent)' }} /> Teller Station Administration
+            <Landmark size={20} style={{ color: 'var(--color-accent)' }} /> Station Administration
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -111,13 +111,13 @@ export default function ManagerView() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
                     <div>
                       <h4 style={{ fontSize: '1.05rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
-                        {counter.name}
+                        Station {counter.windowNumber}
                         <span className={`badge ${isFree ? 'success' : 'danger'}`} style={{ fontSize: '0.6rem', padding: '2px 8px' }}>
                           {isFree ? 'Online' : 'Offline'}
                         </span>
                       </h4>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                      Window {counter.windowNumber} • Specialties: <strong>{counter.type}</strong>
+                      Specialties: <strong>{counter.type}</strong>
                     </p>
                   </div>
                   
@@ -135,7 +135,7 @@ export default function ManagerView() {
                     }}
                   >
                     <Power size={14} />
-                    {counter.isOpen ? 'Close Window' : 'Open Window'}
+                    {counter.isOpen ? 'Close Station' : 'Open Station'}
                   </button>
                 </div>
 
@@ -317,7 +317,7 @@ export default function ManagerView() {
                     </div>
 
                     <p style={{ color: 'var(--text-primary)', fontSize: '0.8rem', fontWeight: '600' }}>
-                      Teller: {rev.assignedTeller?.name || 'Unassigned'} (Window {rev.assignedTeller?.windowNumber || '--'})
+                      Station: {rev.assignedTeller?.windowNumber || '--'}
                     </p>
 
                     {rev.review?.comment ? (

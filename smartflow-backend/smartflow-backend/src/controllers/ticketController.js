@@ -175,7 +175,7 @@ exports.completeTicket = async (req, res, next) => {
         io.to('displays').emit('ticket_assigned', {
           ticketNumber: nextTicket.ticketNumber,
           windowNumber: req.teller.windowNumber,
-          tellerName: req.teller.name,
+          tellerName: `Station ${req.teller.windowNumber}`,
         });
       }
     } else {
@@ -251,7 +251,7 @@ exports.transferTicket = async (req, res, next) => {
       io.to('displays').emit('ticket_assigned', {
         ticketNumber: ticket.ticketNumber,
         windowNumber: targetTeller.windowNumber,
-        tellerName: targetTeller.name,
+        tellerName: `Station ${targetTeller.windowNumber}`,
       });
       io.to('managers').emit('queue_update', { type: 'ticket_transferred' });
       io.to('displays').emit('queue_update', { type: 'ticket_transferred' });

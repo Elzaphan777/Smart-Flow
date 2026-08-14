@@ -424,7 +424,7 @@ export default function CustomerView() {
                   <div>
                     <h4 style={{ fontSize: '1rem', fontWeight: '700' }}>Awaiting Assignment</h4>
                     <p style={{ fontSize: '0.85rem', opacity: '0.85', marginTop: '4px', lineHeight: '1.4' }}>
-                      We are routing you to the best available teller for <strong>{activeTicket.purpose}</strong>. Please have a seat in our customer lounge.
+                      We are routing you to the best available station for <strong>{activeTicket.purpose}</strong>. Please have a seat in our customer lounge.
                     </p>
                   </div>
                 </div>
@@ -442,12 +442,9 @@ export default function CustomerView() {
                 }}>
                   <CheckCircle size={26} style={{ marginTop: '2px' }} />
                   <div>
-                    <h4 style={{ fontSize: '1rem', fontWeight: '700' }}>Your Window is Ready!</h4>
+                    <h4 style={{ fontSize: '1rem', fontWeight: '700' }}>Your Station is Ready!</h4>
                     <p style={{ fontSize: '1.1rem', fontWeight: '800', textTransform: 'uppercase', marginTop: '6px', color: 'var(--color-accent)' }}>
-                      Proceed to Window: {counters.find(c => c.id === activeTicket.assignedCounterId || c.staffId === activeTicket.assignedCounterId)?.windowNumber || 'Assigned Counter'}
-                    </p>
-                    <p style={{ fontSize: '0.85rem', opacity: '0.85', marginTop: '4px' }}>
-                      Teller: {counters.find(c => c.id === activeTicket.assignedCounterId || c.staffId === activeTicket.assignedCounterId)?.name?.split(' (')[0] || 'Representative'}
+                      Proceed to Station: {counters.find(c => c.id === activeTicket.assignedCounterId || c.staffId === activeTicket.assignedCounterId)?.windowNumber || 'Assigned Counter'}
                     </p>
                   </div>
                 </div>
@@ -534,7 +531,7 @@ function TellerReviewForm({ activeTicket }) {
         </div>
         <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--text-primary)' }}>Share Your Experience</h2>
         <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.5' }}>
-          Thank you for banking with us! Please rate the service provided by <strong>{activeTicket.assignedTellerName || 'your Teller'}</strong> at Window <strong>{activeTicket.assignedTellerWindow || '--'}</strong>.
+          Thank you for banking with us! Please rate the service provided by <strong>Station {activeTicket.assignedTellerWindow || '--'}</strong>.
         </p>
       </div>
 

@@ -153,7 +153,7 @@ export default function TellerView() {
                     </span>
                   </div>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                    Window {teller.windowNumber} • Staff ID: <strong>{teller.staffId}</strong>
+                    Station {teller.windowNumber} • Staff ID: <strong>{teller.staffId}</strong>
                   </p>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', opacity: 0.9 }}>
                     Specialties: <em>{teller.type}</em>
@@ -197,9 +197,9 @@ export default function TellerView() {
       {/* Top Info Banner */}
       <div className="glass-panel" style={{ padding: '24px 30px', display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <span className="badge primary" style={{ marginBottom: '6px' }}>Window Terminal</span>
+          <span className="badge primary" style={{ marginBottom: '6px' }}>Station Terminal</span>
           <h2 style={{ fontSize: '1.6rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            Window {currentCounter.windowNumber} — {user.name}
+            Station {currentCounter.windowNumber} Terminal
             <span className={`badge ${(currentCounter.isOpen && currentCounter.isAvailable) ? 'success' : 'danger'}`} style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
               {(currentCounter.isOpen && currentCounter.isAvailable) ? 'Online' : 'Offline'}
             </span>
@@ -246,7 +246,7 @@ export default function TellerView() {
             }}
           >
             <Power size={16} />
-            <span>{currentCounter.isOpen ? 'Close Window' : 'Open Window'}</span>
+            <span>{currentCounter.isOpen ? 'Close Station' : 'Open Station'}</span>
           </button>
         </div>
       </div>
@@ -294,9 +294,9 @@ export default function TellerView() {
           {!currentCounter.isOpen ? (
             <div className="glass-panel" style={{ padding: '48px 30px', textAlign: 'center', color: 'var(--text-secondary)' }}>
               <Power size={48} style={{ opacity: 0.3, marginBottom: '14px' }} />
-              <h4 style={{ color: 'var(--text-primary)', fontWeight: '700' }}>Window is Closed</h4>
+              <h4 style={{ color: 'var(--text-primary)', fontWeight: '700' }}>Station is Closed</h4>
               <p style={{ fontSize: '0.85rem', marginTop: '6px' }}>
-                Open this window using the power button in the top right to start serving queue arrivals.
+                Open this station using the power button in the top right to start serving queue arrivals.
               </p>
             </div>
           ) : servingCustomer ? (
@@ -367,7 +367,7 @@ export default function TellerView() {
                   className="glass-button primary"
                   style={{ width: '100%', height: '46px', borderRadius: '12px', fontSize: '0.95rem' }}
                 >
-                  <CheckCircle size={18} /> Complete & Free Window
+                  <CheckCircle size={18} /> Complete & Free Station
                 </button>
               </div>
             </div>
@@ -385,7 +385,7 @@ export default function TellerView() {
               </div>
               <h3 style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>Customer Ready in Queue</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '6px', maxWidth: '300px', margin: '6px auto 20px auto' }}>
-                Next customer in line: <strong>{waitingCustomers[0].ticketNumber}</strong> ({waitingCustomers[0].name}). Call them to your window to begin service.
+                Next customer in line: <strong>{waitingCustomers[0].ticketNumber}</strong> ({waitingCustomers[0].name}). Call them to your station to begin service.
               </p>
 
               <button
@@ -408,7 +408,7 @@ export default function TellerView() {
               <ShieldCheck size={48} style={{ opacity: 0.3, marginBottom: '14px', color: 'var(--color-accent)' }} />
               <h4 style={{ color: 'var(--text-primary)', fontWeight: '700' }}>Lobby Queue Clear</h4>
               <p style={{ fontSize: '0.85rem', marginTop: '6px' }}>
-                No customers are currently assigned to your window queue. Take a quick break or wait for security check-ins.
+                No customers are currently assigned to your station queue. Take a quick break or wait for security check-ins.
               </p>
             </div>
           )}

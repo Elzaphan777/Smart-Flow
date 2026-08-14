@@ -143,7 +143,7 @@ export const AppProvider = ({ children }) => {
     socket.on('ticket_assigned', (data) => {
       addNotification({
         title: 'Queue Assigned',
-        message: `Ticket ${data.ticketNumber} directed to Window ${data.windowNumber} (${data.tellerName})`,
+        message: `Ticket ${data.ticketNumber} directed to Station ${data.windowNumber}`,
         type: 'assignment'
       });
       
@@ -161,7 +161,7 @@ export const AppProvider = ({ children }) => {
     socket.on('now_serving', (data) => {
       addNotification({
         title: 'Now Serving',
-        message: `Ticket ${data.ticketNumber} is now being served at Window ${data.windowNumber}`,
+        message: `Ticket ${data.ticketNumber} is now being served at Station ${data.windowNumber}`,
         type: 'served'
       });
 
