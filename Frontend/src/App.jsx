@@ -182,28 +182,7 @@ function AppContent() {
 
           {/* Nav Controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {user && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginRight: '8px' }}>
-                {/* User Info Badge */}
-                <div className="glass-panel" style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '6px 14px',
-                  borderRadius: '10px',
-                  boxShadow: 'none',
-                  fontSize: '0.85rem'
-                }}>
-                  {user.role === 'manager' && <Shield size={14} style={{ color: 'var(--color-secondary)' }} />}
-                  {user.role === 'security' && <Shield size={14} style={{ color: 'var(--color-accent)' }} />}
-                  {user.role === 'customer' && <User size={14} style={{ color: 'var(--color-accent)' }} />}
-                  <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{user.name}</span>
-                  <span className={`badge ${user.role === 'manager' ? 'secondary' : 'primary'}`} style={{ fontSize: '0.6rem', padding: '2px 6px' }}>
-                    {user.role === 'manager' ? 'Admin' : user.role}
-                  </span>
-                </div>
-              </div>
-            )}
+
 
             {/* Notification Bell Dropdown (Visible to all active portals) */}
             {currentPortal !== 'home' && (
