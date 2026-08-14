@@ -31,6 +31,15 @@ const VISIT_PURPOSES = [
   'Card Issues / Password Reset'
 ];
 
+const PURPOSE_TO_SERVICE = {
+  'Cash Deposits': 'deposits',
+  'Cash Withdrawals': 'withdrawals',
+  'Account Enquiries': 'general',
+  'Mobile Money / Forex': 'foreign_exchange',
+  'Loans & Credit Services': 'loans',
+  'Card Issues / Password Reset': 'customer_service'
+};
+
 const Barcode = () => {
   const bars = [
     'thick', 'thin', 'medium', 'thick', 'thin', 'thin', 'medium', 'thick',
@@ -112,6 +121,10 @@ export default function CustomerView() {
 
   const position = getQueuePosition();
   const openCounters = counters.filter(c => c.isOpen);
+  
+  const serviceType = activeTicket ? (PURPOSE_TO_SERVICE[activeTicket.purpose] || 'general') : 'general';
+  const handlingCounters = counters.filter(c => c.specializations && c.specializations.includes(serviceType));
+  const handlingStationsStr = handlingCounters.map(c => `Station ${c.windowNumber}`).join(', ');
 
   return (
     <div className="customer-view animate-fade-in" style={{ width: '100%' }}>
@@ -169,6 +182,23 @@ export default function CustomerView() {
                 </div>
               </div>
             </div>
+
+            {/* Service Counter Directory */}
+            {openCounters.length > 0 && (
+              <div className="glass-panel" style={{ padding: '20px', background: 'var(--card-bg)', marginTop: '16px' }}>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Building size={16} style={{ color: 'var(--color-secondary)' }} /> Station Function Directory
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {openCounters.map(c => (
+                    <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', borderBottom: '1px solid var(--card-border)', paddingBottom: '6px' }}>
+                      <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Station {c.windowNumber}</span>
+                      <span style={{ color: 'var(--text-secondary)', textAlign: 'right' }}>{c.type || 'General Service'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column: Portal Check-In Form */}
@@ -426,6 +456,20 @@ export default function CustomerView() {
                     <p style={{ fontSize: '0.85rem', opacity: '0.85', marginTop: '4px', lineHeight: '1.4' }}>
                       We are routing you to the best available station for <strong>{activeTicket.purpose}</strong>. Please have a seat in our customer lounge.
                     </p>
+                    {handlingStationsStr && (
+                      <div style={{
+                        marginTop: '12px',
+                        paddingTop: '10px',
+                        borderTop: '1px solid rgba(217, 119, 6, 0.15)',
+                        fontSize: '0.8rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px'
+                      }}>
+                        <span style={{ fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Designated Service Stations:</span>
+                        <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>{handlingStationsStr}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -446,6 +490,23 @@ export default function CustomerView() {
                     <p style={{ fontSize: '1.1rem', fontWeight: '800', textTransform: 'uppercase', marginTop: '6px', color: 'var(--color-accent)' }}>
                       Proceed to Station: {counters.find(c => c.id === activeTicket.assignedCounterId || c.staffId === activeTicket.assignedCounterId)?.windowNumber || 'Assigned Counter'}
                     </p>
+                    {(() => {
+                      const assignedCounter = counters.find(c => c.id === activeTicket.assignedCounterId || c.staffId === activeTicket.assignedCounterId);
+                      if (assignedCounter && assignedCounter.type) {
+                        return (
+                          <div style={{
+                            marginTop: '8px',
+                            paddingTop: '6px',
+                            borderTop: '1px solid rgba(32, 84, 70, 0.15)',
+                            fontSize: '0.75rem',
+                            color: 'var(--text-secondary)'
+                          }}>
+                            Station Specialization: <strong>{assignedCounter.type}</strong>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                 </div>
               )}

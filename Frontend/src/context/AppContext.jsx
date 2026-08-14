@@ -302,6 +302,7 @@ export const AppProvider = ({ children }) => {
           name: `${t.name} (Window ${t.windowNumber})`,
           windowNumber: t.windowNumber,
           type: t.specializations.map(s => SERVICE_TO_PURPOSE[s] || s).join(', '),
+          specializations: t.specializations,
           isOpen: t.isOnline,
           isAvailable: t.isAvailable,
           customers: tellerTickets,
