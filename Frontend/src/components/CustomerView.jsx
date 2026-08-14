@@ -333,6 +333,10 @@ export default function CustomerView() {
             </form>
           </div>
         </div>
+      ) : activeTicket.status === 'completed' ? (
+        <div style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '24px 0' }}>
+          <TellerReviewForm activeTicket={activeTicket} />
+        </div>
       ) : (
         <div className="grid-2">
           {/* Left Column: Physical Style Ticket Card */}
@@ -474,6 +478,168 @@ export default function CustomerView() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function TellerReviewForm({ activeTicket }) {
+  const { submitTicketReview, clearActiveTicket } = useApp();
+  const [rating, setRating] = useState(100);
+  const [comment, setComment] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const getRatingLabel = (val) => {
+    if (val >= 90) return 'Excellent Service ⭐⭐⭐⭐⭐';
+    if (val >= 70) return 'Good Service ⭐⭐⭐⭐';
+    if (val >= 50) return 'Average Service ⭐⭐⭐';
+    if (val >= 30) return 'Poor Service ⭐⭐';
+    return 'Very Unsatisfied Service ⭐';
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    const res = await submitTicketReview(activeTicket.id, rating, comment);
+    setLoading(false);
+    if (!res.success) {
+      setError(res.message);
+    }
+  };
+
+  return (
+    <div className="glass-panel animate-fade-in" style={{
+      width: '100%',
+      maxWidth: '500px',
+      padding: '36px 30px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '24px',
+      background: 'var(--card-bg)',
+      border: '1px solid var(--card-border)',
+      borderRadius: '24px',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.05)'
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{
+          display: 'inline-flex',
+          padding: '16px',
+          borderRadius: '50%',
+          background: 'var(--color-accent-light)',
+          color: 'var(--color-accent)',
+          marginBottom: '16px'
+        }}>
+          <HeartHandshake size={36} />
+        </div>
+        <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--text-primary)' }}>Share Your Experience</h2>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.5' }}>
+          Thank you for banking with us! Please rate the service provided by <strong>{activeTicket.assignedTellerName || 'your Teller'}</strong> at Window <strong>{activeTicket.assignedTellerWindow || '--'}</strong>.
+        </p>
+      </div>
+
+      {error && (
+        <div style={{
+          padding: '12px 16px',
+          borderRadius: '12px',
+          background: 'rgba(185, 28, 28, 0.05)',
+          border: '1px solid rgba(185, 28, 28, 0.15)',
+          color: 'var(--color-danger)',
+          fontSize: '0.85rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <AlertTriangle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Slider input */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>Satisfaction Rate</span>
+            <span style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--color-accent)' }}>{rating}%</span>
+          </div>
+          
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={rating}
+            onChange={(e) => setRating(Number(e.target.value))}
+            style={{
+              width: '100%',
+              height: '8px',
+              borderRadius: '4px',
+              background: 'var(--card-border)',
+              accentColor: 'var(--color-accent)',
+              cursor: 'pointer',
+              outline: 'none'
+            }}
+          />
+
+          <p style={{ fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '4px' }}>
+            {getRatingLabel(rating)}
+          </p>
+        </div>
+
+        {/* Comment block */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+              Write a Comment (Optional)
+            </label>
+            <span style={{ fontSize: '0.75rem', color: comment.length >= 1000 ? 'var(--color-danger)' : 'var(--text-secondary)' }}>
+              {comment.length} / 1000
+            </span>
+          </div>
+
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value.slice(0, 1000))}
+            placeholder="Tell us what you liked or what we can improve..."
+            maxLength={1000}
+            style={{
+              width: '100%',
+              minHeight: '120px',
+              padding: '14px',
+              borderRadius: '12px',
+              border: '1px solid var(--card-border)',
+              background: 'var(--input-bg, transparent)',
+              color: 'var(--text-primary)',
+              fontSize: '0.9rem',
+              outline: 'none',
+              resize: 'vertical',
+              fontFamily: 'inherit',
+              transition: 'border-color 0.2s'
+            }}
+          />
+        </div>
+
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+          <button
+            type="button"
+            onClick={clearActiveTicket}
+            disabled={loading}
+            className="glass-button"
+            style={{ flex: 1, height: '46px', borderRadius: '12px' }}
+          >
+            Skip Feedback
+          </button>
+          
+          <button
+            type="submit"
+            disabled={loading}
+            className="glass-button primary"
+            style={{ flex: 1, height: '46px', borderRadius: '12px' }}
+          >
+            Submit Review
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

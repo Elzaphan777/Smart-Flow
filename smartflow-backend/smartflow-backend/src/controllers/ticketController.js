@@ -292,6 +292,36 @@ exports.getMyQueue = async (req, res, next) => {
   }
 };
 
+// POST /api/tickets/:id/review  — customer reviews the teller
+exports.reviewTicket = async (req, res, next) => {
+  try {
+    const { rating, comment } = req.body;
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found.' });
+
+    if (ticket.status !== TICKET_STATUS.COMPLETED) {
+      return res.status(400).json({ success: false, message: 'Only completed tickets can be reviewed.' });
+    }
+
+    ticket.review = {
+      rating: Number(rating),
+      comment: String(comment || '').substring(0, 1000),
+      submittedAt: new Date()
+    };
+    await ticket.save();
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to('managers').emit('queue_update', { type: 'ticket_reviewed' });
+      io.to('displays').emit('queue_update', { type: 'ticket_reviewed' });
+    }
+
+    res.status(200).json({ success: true, message: 'Review submitted successfully.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // ─── HELPERS ────────────────────────────────────────────────────────────────
 
 async function getQueuePosition(ticketId, serviceType) {

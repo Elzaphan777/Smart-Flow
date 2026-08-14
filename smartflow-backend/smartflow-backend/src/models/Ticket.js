@@ -60,6 +60,11 @@ const ticketSchema = new mongoose.Schema(
       },
     ],
     notes: { type: String },
+    review: {
+      rating: { type: Number, min: 0, max: 100 },
+      comment: { type: String, maxlength: 1000 },
+      submittedAt: { type: Date }
+    }
   },
   { timestamps: true }
 );

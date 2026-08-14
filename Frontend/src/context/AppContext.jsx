@@ -64,6 +64,9 @@ export const AppProvider = ({ children }) => {
     satisfaction: 95
   });
 
+  // Latest customer reviews
+  const [latestReviews, setLatestReviews] = useState([]);
+
   // Live Alerts/Notifications
   const [notifications, setNotifications] = useState([
     { id: 'init-1', title: 'System Initialized', message: 'Smart Flow queue optimizer is online.', time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), type: 'system', read: false }
@@ -299,13 +302,20 @@ export const AppProvider = ({ children }) => {
 
           const waitTimeMs = completedStats.avgWaitTime || servingStats.avgWaitTime || waitingStats.avgWaitTime || 0;
           const avgWaitTimeMinutes = waitTimeMs > 0 ? (waitTimeMs / 60000) : 6;
-          const satisfactionPercent = Math.max(80, Math.min(99, Math.round(98 - avgWaitTimeMinutes * 1.5)));
+
+          // Real average satisfaction from backend reviews if available
+          const dbAvg = snapData.data.avgSatisfaction;
+          const satisfactionPercent = (dbAvg !== undefined && dbAvg !== null) ? dbAvg : Math.max(80, Math.min(99, Math.round(98 - avgWaitTimeMinutes * 1.5)));
 
           setStats({
             totalServed: completedStats.count || 0,
             avgWaitTime: avgWaitTimeMinutes,
             satisfaction: satisfactionPercent
           });
+
+          if (snapData.data.latestReviews) {
+            setLatestReviews(snapData.data.latestReviews);
+          }
         }
       }
     } catch (err) {
@@ -329,6 +339,12 @@ export const AppProvider = ({ children }) => {
         const data = await res.json();
         if (data.success && data.data) {
           const t = data.data;
+          let localStatus = 'checked_in';
+          if (t.status === 'completed') {
+            localStatus = 'completed';
+          } else if (t.status !== 'waiting') {
+            localStatus = 'directed';
+          }
           setActiveTicket({
             id: t._id,
             name: t.clientInfo?.name,
@@ -337,9 +353,11 @@ export const AppProvider = ({ children }) => {
             bank: t.clientInfo?.accountNumber || 'GCB Bank',
             isVip: t.priority === 'priority',
             ticketNumber: t.ticketNumber,
-            status: t.status === 'waiting' ? 'checked_in' : 'directed',
+            status: localStatus,
             checkInTime: new Date(t.timing?.issuedAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             assignedCounterId: t.assignedTeller?._id || t.assignedTeller,
+            assignedTellerName: t.assignedTeller?.name || '',
+            assignedTellerWindow: t.assignedTeller?.windowNumber || '',
             waitTime: 0
           });
         }
@@ -711,6 +729,31 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // Customer Action: Submit a ticket review
+  const submitTicketReview = async (ticketId, rating, comment) => {
+    try {
+      const res = await fetch(`${API_BASE}/tickets/${ticketId}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, comment })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActiveTicket(null);
+        refreshQueueAndSnapshot();
+        return { success: true };
+      }
+      return { success: false, message: data.message || 'Failed to submit review.' };
+    } catch (err) {
+      console.error('Error submitting review:', err);
+      return { success: false, message: 'Network error submitting review.' };
+    }
+  };
+
+  const clearActiveTicket = () => {
+    setActiveTicket(null);
+  };
+
   const logoutUser = () => {
     setUser(null);
     setActiveTicket(null);
@@ -745,7 +788,10 @@ export const AppProvider = ({ children }) => {
       callTicket,
       completeTicket,
       toggleTellerAvailability,
-      approveAndDirectTicket
+      approveAndDirectTicket,
+      latestReviews,
+      submitTicketReview,
+      clearActiveTicket
     }}>
       {children}
     </AppContext.Provider>
