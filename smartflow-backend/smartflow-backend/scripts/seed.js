@@ -18,7 +18,7 @@ const seedTellers = [
     specializations: ['general', 'customer_service'],
   },
   {
-    name: 'Kwame Asante',
+    name: 'Station 1',
     staffId: 'TLR001',
     email: 'kwame@smartflow.com',
     password: 'Teller@1234',
@@ -27,7 +27,7 @@ const seedTellers = [
     specializations: ['general', 'deposits', 'withdrawals', 'customer_service'],
   },
   {
-    name: 'Abena Mensah',
+    name: 'Station 2',
     staffId: 'TLR002',
     email: 'abena@smartflow.com',
     password: 'Teller@1234',
@@ -36,7 +36,7 @@ const seedTellers = [
     specializations: ['foreign_exchange', 'general'],
   },
   {
-    name: 'Kofi Boateng',
+    name: 'Station 3',
     staffId: 'TLR003',
     email: 'kofi@smartflow.com',
     password: 'Teller@1234',
@@ -45,7 +45,7 @@ const seedTellers = [
     specializations: ['loans', 'account_opening'],
   },
   {
-    name: 'Ama Owusu',
+    name: 'Station 4',
     staffId: 'TLR004',
     email: 'ama@smartflow.com',
     password: 'Teller@1234',
@@ -54,7 +54,7 @@ const seedTellers = [
     specializations: ['bulk_deposits', 'deposits'],
   },
   {
-    name: 'Yaw Darko',
+    name: 'Station 5',
     staffId: 'TLR005',
     email: 'yaw@smartflow.com',
     password: 'Teller@1234',

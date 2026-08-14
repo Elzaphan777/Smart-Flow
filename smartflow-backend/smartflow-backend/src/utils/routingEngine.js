@@ -73,7 +73,7 @@ const updateTellerStats = async (tellerId, serviceTimeMs) => {
  * Get a branch-wide snapshot for the manager dashboard.
  */
 const getBranchSnapshot = async () => {
-  const [tellers, ticketStats] = await Promise.all([
+  const [tellers, ticketStats, satisfactionResult, latestReviews] = await Promise.all([
     Teller.find({ isOnline: true })
       .populate('currentTicket', 'ticketNumber serviceType timing.serviceStartedAt')
       .lean(),
@@ -92,6 +92,28 @@ const getBranchSnapshot = async () => {
         },
       },
     ]),
+    Ticket.aggregate([
+      {
+        $match: {
+          'timing.issuedAt': { $gte: startOfDay() },
+          'review.rating': { $exists: true, $ne: null }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          avgRating: { $avg: '$review.rating' }
+        }
+      }
+    ]),
+    Ticket.find({
+      status: 'completed',
+      'review.rating': { $exists: true, $ne: null }
+    })
+      .populate('assignedTeller', 'name windowNumber')
+      .sort({ 'review.submittedAt': -1 })
+      .limit(10)
+      .lean()
   ]);
 
   // Queue lengths per teller
@@ -117,10 +139,14 @@ const getBranchSnapshot = async () => {
     { $sort: { count: -1 } },
   ]);
 
+  const avgSatisfaction = satisfactionResult[0] ? Math.round(satisfactionResult[0].avgRating) : null;
+
   return {
     tellers: enrichedTellers,
     ticketStats,
     serviceBreakdown,
+    avgSatisfaction,
+    latestReviews,
     generatedAt: new Date(),
   };
 };

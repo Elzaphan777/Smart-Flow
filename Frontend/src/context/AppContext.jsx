@@ -64,6 +64,9 @@ export const AppProvider = ({ children }) => {
     satisfaction: 95
   });
 
+  // Latest customer reviews
+  const [latestReviews, setLatestReviews] = useState([]);
+
   // Live Alerts/Notifications
   const [notifications, setNotifications] = useState([
     { id: 'init-1', title: 'System Initialized', message: 'Smart Flow queue optimizer is online.', time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), type: 'system', read: false }
@@ -140,7 +143,7 @@ export const AppProvider = ({ children }) => {
     socket.on('ticket_assigned', (data) => {
       addNotification({
         title: 'Queue Assigned',
-        message: `Ticket ${data.ticketNumber} directed to Window ${data.windowNumber} (${data.tellerName})`,
+        message: `Ticket ${data.ticketNumber} directed to Station ${data.windowNumber}`,
         type: 'assignment'
       });
       
@@ -158,7 +161,7 @@ export const AppProvider = ({ children }) => {
     socket.on('now_serving', (data) => {
       addNotification({
         title: 'Now Serving',
-        message: `Ticket ${data.ticketNumber} is now being served at Window ${data.windowNumber}`,
+        message: `Ticket ${data.ticketNumber} is now being served at Station ${data.windowNumber}`,
         type: 'served'
       });
 
@@ -187,6 +190,41 @@ export const AppProvider = ({ children }) => {
     });
 
     socket.on('teller_status_change', (data) => {
+      if (data.isOnline && data.isAvailable) {
+        addNotification({
+          title: 'Station Online',
+          message: `Station ${data.windowNumber} is now online and available.`,
+          type: 'station_free'
+        });
+      }
+      refreshQueueAndSnapshot();
+    });
+
+    socket.on('teller_signalled_freedom', (data) => {
+      addNotification({
+        title: 'Station Ready',
+        message: `Station ${data.windowNumber} is free and ready to serve!`,
+        type: 'station_free'
+      });
+      refreshQueueAndSnapshot();
+    });
+
+    socket.on('ticket_completed', (data) => {
+      addNotification({
+        title: 'Service Completed',
+        message: `Ticket ${data.ticketNumber} transaction completed at Station ${data.windowNumber}.`,
+        type: 'served'
+      });
+      setActiveTicket(prev => {
+        if (prev && prev.ticketNumber === data.ticketNumber) {
+          return { 
+            ...prev, 
+            status: 'completed', 
+            assignedTellerWindow: data.windowNumber 
+          };
+        }
+        return prev;
+      });
       refreshQueueAndSnapshot();
     });
 
@@ -274,6 +312,7 @@ export const AppProvider = ({ children }) => {
           name: `${t.name} (Window ${t.windowNumber})`,
           windowNumber: t.windowNumber,
           type: t.specializations.map(s => SERVICE_TO_PURPOSE[s] || s).join(', '),
+          specializations: t.specializations,
           isOpen: t.isOnline,
           isAvailable: t.isAvailable,
           customers: tellerTickets,
@@ -299,13 +338,20 @@ export const AppProvider = ({ children }) => {
 
           const waitTimeMs = completedStats.avgWaitTime || servingStats.avgWaitTime || waitingStats.avgWaitTime || 0;
           const avgWaitTimeMinutes = waitTimeMs > 0 ? (waitTimeMs / 60000) : 6;
-          const satisfactionPercent = Math.max(80, Math.min(99, Math.round(98 - avgWaitTimeMinutes * 1.5)));
+
+          // Real average satisfaction from backend reviews if available
+          const dbAvg = snapData.data.avgSatisfaction;
+          const satisfactionPercent = (dbAvg !== undefined && dbAvg !== null) ? dbAvg : Math.max(80, Math.min(99, Math.round(98 - avgWaitTimeMinutes * 1.5)));
 
           setStats({
             totalServed: completedStats.count || 0,
             avgWaitTime: avgWaitTimeMinutes,
             satisfaction: satisfactionPercent
           });
+
+          if (snapData.data.latestReviews) {
+            setLatestReviews(snapData.data.latestReviews);
+          }
         }
       }
     } catch (err) {
@@ -329,6 +375,12 @@ export const AppProvider = ({ children }) => {
         const data = await res.json();
         if (data.success && data.data) {
           const t = data.data;
+          let localStatus = 'checked_in';
+          if (t.status === 'completed') {
+            localStatus = 'completed';
+          } else if (t.status !== 'waiting') {
+            localStatus = 'directed';
+          }
           setActiveTicket({
             id: t._id,
             name: t.clientInfo?.name,
@@ -337,9 +389,11 @@ export const AppProvider = ({ children }) => {
             bank: t.clientInfo?.accountNumber || 'GCB Bank',
             isVip: t.priority === 'priority',
             ticketNumber: t.ticketNumber,
-            status: t.status === 'waiting' ? 'checked_in' : 'directed',
+            status: localStatus,
             checkInTime: new Date(t.timing?.issuedAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             assignedCounterId: t.assignedTeller?._id || t.assignedTeller,
+            assignedTellerName: t.assignedTeller?.name || '',
+            assignedTellerWindow: t.assignedTeller?.windowNumber || '',
             waitTime: 0
           });
         }
@@ -607,6 +661,159 @@ export const AppProvider = ({ children }) => {
     return { success: true };
   };
 
+  // Teller specific action: Call ticket
+  const callTicket = async (staffId, ticketId) => {
+    try {
+      const token = await getAuthToken(staffId);
+      if (!token) return { success: false, message: 'Authentication failed for teller.' };
+
+      const res = await fetch(`${API_BASE}/tickets/${ticketId}/call`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        refreshQueueAndSnapshot();
+        return { success: true, data: data.data };
+      }
+      return { success: false, message: data.message || 'Failed to call ticket.' };
+    } catch (err) {
+      console.error('Error calling ticket:', err);
+      return { success: false, message: 'Network error calling ticket.' };
+    }
+  };
+
+  // Teller specific action: Complete ticket
+  const completeTicket = async (staffId, ticketId, notes) => {
+    try {
+      const token = await getAuthToken(staffId);
+      if (!token) return { success: false, message: 'Authentication failed for teller.' };
+
+      const res = await fetch(`${API_BASE}/tickets/${ticketId}/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ notes })
+      });
+      const data = await res.json();
+      if (data.success) {
+        refreshQueueAndSnapshot();
+        return { success: true, data: data.data };
+      }
+      return { success: false, message: data.message || 'Failed to complete ticket.' };
+    } catch (err) {
+      console.error('Error completing ticket:', err);
+      return { success: false, message: 'Network error completing ticket.' };
+    }
+  };
+
+  // Teller specific action: Toggle availability
+  const toggleTellerAvailability = async (staffId, isAvailable) => {
+    try {
+      const token = await getAuthToken(staffId);
+      if (!token) return { success: false, message: 'Authentication failed for teller.' };
+
+      const res = await fetch(`${API_BASE}/tellers/availability`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isAvailable })
+      });
+      const data = await res.json();
+      if (data.success) {
+        refreshQueueAndSnapshot();
+        return { success: true, data: data.data };
+      }
+      return { success: false, message: data.message || 'Failed to toggle availability.' };
+    } catch (err) {
+      console.error('Error toggling availability:', err);
+      return { success: false, message: 'Network error toggling availability.' };
+    }
+  };
+
+  // Teller specific action: Approve and direct ticket to himself
+  const approveAndDirectTicket = async (staffId, ticketId) => {
+    try {
+      const token = await getAuthToken(staffId);
+      if (!token) return { success: false, message: 'Authentication failed for teller.' };
+
+      // Find the teller object in counters to get their Mongo _id
+      const tellerCounter = counters.find(c => c.staffId === staffId);
+      if (!tellerCounter) return { success: false, message: 'Teller station profile not found.' };
+
+      const res = await fetch(`${API_BASE}/tickets/${ticketId}/transfer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ toTellerId: tellerCounter.id, reason: 'Self-assignment' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        refreshQueueAndSnapshot();
+        return { success: true, data: data.data };
+      }
+      return { success: false, message: data.message || 'Failed to assign ticket.' };
+    } catch (err) {
+      console.error('Error in self-assignment:', err);
+      return { success: false, message: 'Network error in self-assignment.' };
+    }
+  };
+
+  // Customer Action: Submit a ticket review
+  const submitTicketReview = async (ticketId, rating, comment) => {
+    try {
+      const res = await fetch(`${API_BASE}/tickets/${ticketId}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, comment })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActiveTicket(null);
+        refreshQueueAndSnapshot();
+        return { success: true };
+      }
+      return { success: false, message: data.message || 'Failed to submit review.' };
+    } catch (err) {
+      console.error('Error submitting review:', err);
+      return { success: false, message: 'Network error submitting review.' };
+    }
+  };
+
+  const clearActiveTicket = () => {
+    setActiveTicket(null);
+  };
+
+  // Teller specific action: Signal freedom to branch
+  const signalTellerFreedom = async (staffId) => {
+    try {
+      const token = await getAuthToken(staffId);
+      if (!token) return { success: false, message: 'Authentication failed for teller.' };
+
+      const res = await fetch(`${API_BASE}/tellers/signal-freedom`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        return { success: true };
+      }
+      return { success: false, message: data.message || 'Failed to signal freedom.' };
+    } catch (err) {
+      console.error('Error signalling freedom:', err);
+      return { success: false, message: 'Network error signalling freedom.' };
+    }
+  };
+
   const logoutUser = () => {
     setUser(null);
     setActiveTicket(null);
@@ -637,7 +844,15 @@ export const AppProvider = ({ children }) => {
       serveCustomer,
       toggleCounterStatus,
       clearNotifications,
-      resetSimulator
+      resetSimulator,
+      callTicket,
+      completeTicket,
+      toggleTellerAvailability,
+      approveAndDirectTicket,
+      latestReviews,
+      submitTicketReview,
+      clearActiveTicket,
+      signalTellerFreedom
     }}>
       {children}
     </AppContext.Provider>

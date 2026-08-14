@@ -9,12 +9,14 @@ const {
   transferTicket,
   getQueue,
   getMyQueue,
+  reviewTicket,
 } = require('../controllers/ticketController');
 const { protect, restrict } = require('../middleware/auth');
 
 // Public — kiosk endpoints (no auth needed at kiosk terminal)
 router.post('/issue', issueTicket);
 router.get('/status/:ticketNumber', getTicketStatus);
+router.post('/:id/review', reviewTicket);
 
 // Authenticated — teller & manager endpoints
 router.get('/queue', protect, restrict('teller', 'manager', 'admin'), getQueue);

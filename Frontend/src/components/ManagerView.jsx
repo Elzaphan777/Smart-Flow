@@ -10,7 +10,8 @@ export default function ManagerView() {
     serveCustomer, 
     toggleCounterStatus, 
     clearNotifications,
-    resetSimulator
+    resetSimulator,
+    latestReviews
   } = useApp();
 
   // Compute active queues totals
@@ -93,28 +94,30 @@ export default function ManagerView() {
         {/* Left Column: Teller Stations Administration */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
-            <Landmark size={20} style={{ color: 'var(--color-accent)' }} /> Teller Station Administration
+            <Landmark size={20} style={{ color: 'var(--color-accent)' }} /> Station Administration
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {counters.map(counter => (
-              <div key={counter.id} className="glass-panel" style={{
-                padding: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px',
-                borderLeft: counter.isOpen ? '5px solid var(--color-accent)' : '5px solid var(--text-secondary)'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-                  <div>
-                    <h4 style={{ fontSize: '1.05rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
-                      {counter.name}
-                      <span className={`badge ${counter.isOpen ? 'success' : 'danger'}`} style={{ fontSize: '0.6rem', padding: '2px 8px' }}>
-                        {counter.isOpen ? 'Open' : 'Closed'}
-                      </span>
-                    </h4>
+            {counters.map(counter => {
+              const isFree = counter.isOpen && counter.isAvailable;
+              return (
+                <div key={counter.id} className="glass-panel" style={{
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
+                  borderLeft: isFree ? '5px solid var(--color-accent)' : '5px solid var(--text-secondary)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                    <div>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+                        Station {counter.windowNumber}
+                        <span className={`badge ${isFree ? 'success' : 'danger'}`} style={{ fontSize: '0.6rem', padding: '2px 8px' }}>
+                          {isFree ? 'Online' : 'Offline'}
+                        </span>
+                      </h4>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                      Window {counter.windowNumber} • Specialties: <strong>{counter.type}</strong>
+                      Specialties: <strong>{counter.type}</strong>
                     </p>
                   </div>
                   
@@ -132,7 +135,7 @@ export default function ManagerView() {
                     }}
                   >
                     <Power size={14} />
-                    {counter.isOpen ? 'Close Window' : 'Open Window'}
+                    {counter.isOpen ? 'Close Station' : 'Open Station'}
                   </button>
                 </div>
 
@@ -205,7 +208,8 @@ export default function ManagerView() {
                   </div>
                 )}
               </div>
-            ))}
+            );
+          })}
           </div>
         </div>
 
@@ -269,8 +273,80 @@ export default function ManagerView() {
               ))
             )}
           </div>
-        </div>
+          
+          {/* Customer Feedback & Reviews Panel */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '24px' }}>
+            <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700' }}>
+              <Smile size={20} style={{ color: 'var(--color-highlight)' }} /> Customer Feedback & Reviews
+            </h3>
 
+            <div className="glass-panel" style={{
+              padding: '20px 24px',
+              maxHeight: '400px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              background: 'var(--card-bg)'
+            }}>
+              {!latestReviews || latestReviews.length === 0 ? (
+                <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  <Smile size={36} style={{ opacity: 0.5, marginBottom: '8px' }} />
+                  <p style={{ fontSize: '0.85rem' }}>No customer reviews received yet today.</p>
+                </div>
+              ) : (
+                latestReviews.map((rev) => (
+                  <div key={rev._id || rev.id} style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    paddingBottom: '12px',
+                    borderBottom: '1px solid var(--card-border)',
+                    fontSize: '0.85rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontWeight: '800', color: 'var(--color-accent)' }}>{rev.ticketNumber}</span>
+                        <span className="badge warning" style={{ fontSize: '0.7rem', padding: '1px 6px', fontWeight: '700' }}>
+                          ★ {rev.review?.rating}%
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        {new Date(rev.review?.submittedAt || rev.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+
+                    <p style={{ color: 'var(--text-primary)', fontSize: '0.8rem', fontWeight: '600' }}>
+                      Station: {rev.assignedTeller?.windowNumber || '--'}
+                    </p>
+
+                    {rev.review?.comment ? (
+                      <p style={{
+                        color: 'var(--text-secondary)',
+                        fontSize: '0.8rem',
+                        lineHeight: '1.4',
+                        background: 'rgba(32, 84, 70, 0.01)',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid var(--card-border)',
+                        fontStyle: 'italic',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word'
+                      }}>
+                        "{rev.review.comment}"
+                      </p>
+                    ) : (
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontStyle: 'italic' }}>
+                        No written comment left.
+                      </p>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );

@@ -153,40 +153,25 @@ exports.completeTicket = async (req, res, next) => {
     await updateTellerStats(req.teller._id, ticket.timing.serviceTimeMs);
 
     const io = req.app.get('io');
-
-    // Check if there's a waiting ticket for this teller's services
-    const nextTicket = await Ticket.findOne({
-      status: TICKET_STATUS.WAITING,
-      serviceType: { $in: req.teller.specializations },
-    }).sort({ priority: -1, 'timing.issuedAt': 1 }); // priority first, then FIFO
-
-    if (nextTicket) {
-      nextTicket.assignedTeller = req.teller._id;
-      nextTicket.status = TICKET_STATUS.ASSIGNED;
-      nextTicket.timing.assignedAt = new Date();
-      await nextTicket.save();
-
-      req.teller.isAvailable = false;
-      req.teller.currentTicket = nextTicket._id;
-      await req.teller.save();
-
-      if (io) {
-        io.to(`teller_${req.teller._id}`).emit('new_ticket', { ticket: nextTicket });
-        io.to('displays').emit('ticket_assigned', {
-          ticketNumber: nextTicket.ticketNumber,
-          windowNumber: req.teller.windowNumber,
-          tellerName: req.teller.name,
-        });
-      }
-    } else {
-      // No waiting ticket — teller is free
-      req.teller.isAvailable = true;
-      req.teller.currentTicket = null;
-      await req.teller.save();
+    if (io) {
+      io.to('managers').emit('ticket_completed', {
+        ticketNumber: ticket.ticketNumber,
+        windowNumber: req.teller.windowNumber
+      });
+      io.to('displays').emit('ticket_completed', {
+        ticketNumber: ticket.ticketNumber,
+        windowNumber: req.teller.windowNumber
+      });
     }
+
+    // No auto-assignment — teller is free and ready to be reassigned manually or by new check-ins
+    req.teller.isAvailable = true;
+    req.teller.currentTicket = null;
+    await req.teller.save();
 
     if (io) {
       io.to('managers').emit('queue_update', { type: 'ticket_completed' });
+      io.to('displays').emit('queue_update', { type: 'ticket_completed' });
     }
 
     res.status(200).json({ success: true, message: 'Ticket completed.', data: ticket });
@@ -214,7 +199,10 @@ exports.cancelTicket = async (req, res, next) => {
     }
 
     const io = req.app.get('io');
-    if (io) io.to('managers').emit('queue_update', { type: 'ticket_cancelled' });
+    if (io) {
+      io.to('managers').emit('queue_update', { type: 'ticket_cancelled' });
+      io.to('displays').emit('queue_update', { type: 'ticket_cancelled' });
+    }
 
     res.status(200).json({ success: true, message: 'Ticket cancelled.' });
   } catch (err) {
@@ -247,8 +235,10 @@ exports.transferTicket = async (req, res, next) => {
       io.to('displays').emit('ticket_assigned', {
         ticketNumber: ticket.ticketNumber,
         windowNumber: targetTeller.windowNumber,
-        tellerName: targetTeller.name,
+        tellerName: `Station ${targetTeller.windowNumber}`,
       });
+      io.to('managers').emit('queue_update', { type: 'ticket_transferred' });
+      io.to('displays').emit('queue_update', { type: 'ticket_transferred' });
     }
 
     res.status(200).json({ success: true, message: 'Ticket transferred.', data: ticket });
@@ -281,6 +271,36 @@ exports.getMyQueue = async (req, res, next) => {
     }).sort({ priority: -1, 'timing.issuedAt': 1 });
 
     res.status(200).json({ success: true, count: tickets.length, data: tickets });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/tickets/:id/review  — customer reviews the teller
+exports.reviewTicket = async (req, res, next) => {
+  try {
+    const { rating, comment } = req.body;
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found.' });
+
+    if (ticket.status !== TICKET_STATUS.COMPLETED) {
+      return res.status(400).json({ success: false, message: 'Only completed tickets can be reviewed.' });
+    }
+
+    ticket.review = {
+      rating: Number(rating),
+      comment: String(comment || '').substring(0, 1000),
+      submittedAt: new Date()
+    };
+    await ticket.save();
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to('managers').emit('queue_update', { type: 'ticket_reviewed' });
+      io.to('displays').emit('queue_update', { type: 'ticket_reviewed' });
+    }
+
+    res.status(200).json({ success: true, message: 'Review submitted successfully.' });
   } catch (err) {
     next(err);
   }

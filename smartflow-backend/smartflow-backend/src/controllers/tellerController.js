@@ -47,6 +47,13 @@ exports.toggleAvailability = async (req, res, next) => {
         tellerId: req.teller._id,
         windowNumber: req.teller.windowNumber,
         isAvailable,
+        isOnline: req.teller.isOnline,
+      });
+      io.to('displays').emit('teller_status_change', {
+        tellerId: req.teller._id,
+        windowNumber: req.teller.windowNumber,
+        isAvailable,
+        isOnline: req.teller.isOnline,
       });
     }
 
@@ -85,6 +92,12 @@ exports.updateTeller = async (req, res, next) => {
         isAvailable: teller.isAvailable,
         isOnline: teller.isOnline,
       });
+      io.to('displays').emit('teller_status_change', {
+        tellerId: teller._id,
+        windowNumber: teller.windowNumber,
+        isAvailable: teller.isAvailable,
+        isOnline: teller.isOnline,
+      });
     }
 
     res.status(200).json({ success: true, data: teller });
@@ -109,6 +122,31 @@ exports.getTodayStats = async (req, res, next) => {
   try {
     const tellers = await Teller.find({ isOnline: true }).select('name windowNumber stats');
     res.status(200).json({ success: true, data: tellers });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/tellers/signal-freedom  — teller signals they are free
+exports.signalFreedom = async (req, res, next) => {
+  try {
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('teller_status_change', {
+        tellerId: req.teller._id,
+        windowNumber: req.teller.windowNumber,
+        isAvailable: true,
+        isOnline: true,
+        signalFreedom: true
+      });
+      io.to('displays').emit('teller_signalled_freedom', {
+        windowNumber: req.teller.windowNumber
+      });
+      io.to('managers').emit('teller_signalled_freedom', {
+        windowNumber: req.teller.windowNumber
+      });
+    }
+    res.status(200).json({ success: true, message: 'Freedom signal broadcasted.' });
   } catch (err) {
     next(err);
   }

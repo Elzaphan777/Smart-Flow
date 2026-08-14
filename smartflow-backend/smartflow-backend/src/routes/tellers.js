@@ -8,6 +8,7 @@ const {
   updateTeller,
   deleteTeller,
   getTodayStats,
+  signalFreedom,
 } = require('../controllers/tellerController');
 const { protect, restrict } = require('../middleware/auth');
 
@@ -19,6 +20,7 @@ router.use(protect); // All below require auth
 router.get('/', restrict('manager', 'admin'), getAllTellers);
 router.get('/:id', getTeller);
 router.patch('/availability', toggleAvailability);
+router.post('/signal-freedom', signalFreedom);
 router.patch('/:id', restrict('manager', 'admin'), updateTeller);
 router.delete('/:id', restrict('admin'), deleteTeller);
 
