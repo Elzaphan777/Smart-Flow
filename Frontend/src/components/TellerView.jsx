@@ -12,7 +12,8 @@ import {
   Users, 
   ShieldCheck, 
   Power,
-  ChevronRight
+  ChevronRight,
+  Bell
 } from 'lucide-react';
 
 export default function TellerView() {
@@ -25,7 +26,8 @@ export default function TellerView() {
     toggleTellerAvailability, 
     toggleCounterStatus,
     approveAndDirectTicket,
-    checkIns
+    checkIns,
+    signalTellerFreedom
   } = useApp();
 
   const [notes, setNotes] = useState('');
@@ -72,6 +74,20 @@ export default function TellerView() {
     const res = await toggleTellerAvailability(user.staffId, newAvailable);
     setLoading(false);
     if (!res.success) {
+      setError(res.message);
+    }
+  };
+
+  const handleSignalFreedom = async () => {
+    if (!currentCounter) return;
+    setLoading(true);
+    setError('');
+    const res = await signalTellerFreedom(user.staffId);
+    setLoading(false);
+    if (res.success) {
+      setSuccess('Freedom signal broadcasted to branch!');
+      setTimeout(() => setSuccess(''), 3000);
+    } else {
       setError(res.message);
     }
   };
@@ -231,6 +247,29 @@ export default function TellerView() {
               </>
             )}
           </button>
+
+          {/* Signal Freedom Button */}
+          {currentCounter.isOpen && currentCounter.isAvailable && (
+            <button 
+              onClick={handleSignalFreedom}
+              disabled={loading}
+              className="glass-button primary animate-pulse-soft"
+              style={{
+                padding: '10px 18px',
+                borderRadius: '12px',
+                background: 'var(--color-secondary)',
+                borderColor: 'var(--color-secondary)',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+              title="Signal freedom to managers and alert customers"
+            >
+              <Bell size={16} />
+              <span>Signal Freedom</span>
+            </button>
+          )}
 
           {/* Open/Close Toggle */}
           <button 

@@ -190,6 +190,31 @@ export const AppProvider = ({ children }) => {
     });
 
     socket.on('teller_status_change', (data) => {
+      if (data.isOnline && data.isAvailable) {
+        addNotification({
+          title: 'Station Online',
+          message: `Station ${data.windowNumber} is now online and available.`,
+          type: 'station_free'
+        });
+      }
+      refreshQueueAndSnapshot();
+    });
+
+    socket.on('teller_signalled_freedom', (data) => {
+      addNotification({
+        title: 'Station Ready',
+        message: `Station ${data.windowNumber} is free and ready to serve!`,
+        type: 'station_free'
+      });
+      refreshQueueAndSnapshot();
+    });
+
+    socket.on('ticket_completed', (data) => {
+      addNotification({
+        title: 'Service Completed',
+        message: `Ticket ${data.ticketNumber} transaction completed at Station ${data.windowNumber}.`,
+        type: 'served'
+      });
       refreshQueueAndSnapshot();
     });
 
@@ -754,6 +779,30 @@ export const AppProvider = ({ children }) => {
     setActiveTicket(null);
   };
 
+  // Teller specific action: Signal freedom to branch
+  const signalTellerFreedom = async (staffId) => {
+    try {
+      const token = await getAuthToken(staffId);
+      if (!token) return { success: false, message: 'Authentication failed for teller.' };
+
+      const res = await fetch(`${API_BASE}/tellers/signal-freedom`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        return { success: true };
+      }
+      return { success: false, message: data.message || 'Failed to signal freedom.' };
+    } catch (err) {
+      console.error('Error signalling freedom:', err);
+      return { success: false, message: 'Network error signalling freedom.' };
+    }
+  };
+
   const logoutUser = () => {
     setUser(null);
     setActiveTicket(null);
@@ -791,7 +840,8 @@ export const AppProvider = ({ children }) => {
       approveAndDirectTicket,
       latestReviews,
       submitTicketReview,
-      clearActiveTicket
+      clearActiveTicket,
+      signalTellerFreedom
     }}>
       {children}
     </AppContext.Provider>

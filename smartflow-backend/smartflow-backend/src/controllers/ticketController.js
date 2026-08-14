@@ -153,6 +153,16 @@ exports.completeTicket = async (req, res, next) => {
     await updateTellerStats(req.teller._id, ticket.timing.serviceTimeMs);
 
     const io = req.app.get('io');
+    if (io) {
+      io.to('managers').emit('ticket_completed', {
+        ticketNumber: ticket.ticketNumber,
+        windowNumber: req.teller.windowNumber
+      });
+      io.to('displays').emit('ticket_completed', {
+        ticketNumber: ticket.ticketNumber,
+        windowNumber: req.teller.windowNumber
+      });
+    }
 
     // Check if there's a waiting ticket for this teller's services
     const nextTicket = await Ticket.findOne({

@@ -7,7 +7,8 @@ import AuthView from './components/AuthView';
 import { Sun, Moon, Bell, LogOut, Landmark, User, Shield, Users, ArrowLeft, ArrowRight, LayoutGrid } from 'lucide-react';
 
 function AppContent() {
-  const { theme, toggleTheme, notifications, user, logoutUser, loginUser, setActiveRole } = useApp();
+  const { theme, toggleTheme, notifications, user, logoutUser, loginUser, setActiveRole, clearNotifications } = useApp();
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
 
   // Initialize currentPortal state based on existing user session, default to "home"
   const [currentPortal, setCurrentPortal] = useState(() => {
@@ -204,27 +205,102 @@ function AppContent() {
               </div>
             )}
 
-            {/* Notification Bell (Only for Staff roles) */}
-            {user && user.role !== 'customer' && unreadAlerts > 0 && (
-              <div style={{ position: 'relative', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                <Bell size={20} />
-                <span style={{
-                  position: 'absolute',
-                  top: '-4px',
-                  right: '-4px',
-                  background: 'var(--color-danger)',
-                  color: 'white',
-                  fontSize: '0.65rem',
-                  fontWeight: '700',
-                  borderRadius: '50%',
-                  width: '15px',
-                  height: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  {unreadAlerts}
-                </span>
+            {/* Notification Bell Dropdown (Visible to all active portals) */}
+            {currentPortal !== 'home' && (
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+                  className="glass-button"
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    padding: 0,
+                    borderRadius: '10px',
+                    border: '1px solid var(--card-border)',
+                    position: 'relative'
+                  }}
+                  title="Notifications"
+                >
+                  <Bell size={18} />
+                  {unreadAlerts > 0 && (
+                    <span style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      right: '-4px',
+                      background: 'var(--color-danger)',
+                      color: 'white',
+                      fontSize: '0.6rem',
+                      fontWeight: '700',
+                      borderRadius: '50%',
+                      width: '16px',
+                      height: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {unreadAlerts}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifDropdown && (
+                  <div className="glass-panel" style={{
+                    position: 'absolute',
+                    top: '48px',
+                    right: 0,
+                    width: '320px',
+                    maxHeight: '400px',
+                    overflowY: 'auto',
+                    zIndex: 1000,
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    background: 'var(--card-bg)',
+                    border: '1px solid var(--card-border)',
+                    borderRadius: '16px',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--card-border)', paddingBottom: '8px' }}>
+                      <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>Live Alerts</h4>
+                      {unreadAlerts > 0 && (
+                        <button
+                          onClick={clearNotifications}
+                          style={{ background: 'none', border: 'none', color: 'var(--color-secondary)', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '600' }}
+                        >
+                          Clear All
+                        </button>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {notifications.length === 0 ? (
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'center', padding: '20px 0' }}>
+                          No notifications at this time.
+                        </p>
+                      ) : (
+                        notifications.map(notif => (
+                          <div key={notif.id} style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px',
+                            paddingBottom: '8px',
+                            borderBottom: '1px solid var(--card-border)',
+                            fontSize: '0.8rem'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{notif.title}</span>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{notif.time}</span>
+                            </div>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', lineHeight: '1.3' }}>
+                              {notif.message}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
