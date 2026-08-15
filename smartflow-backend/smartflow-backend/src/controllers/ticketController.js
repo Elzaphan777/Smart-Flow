@@ -53,6 +53,7 @@ exports.issueTicket = async (req, res, next) => {
           status: ticket.status,
           assignedWindow: bestTeller.windowNumber,
           assignedTeller: bestTeller.name,
+          verificationCode: ticket.verificationCode,
         },
       });
     }
@@ -75,6 +76,7 @@ exports.issueTicket = async (req, res, next) => {
         status: ticket.status,
         assignedWindow: null,
         position: await getQueuePosition(ticket._id, serviceType),
+        verificationCode: ticket.verificationCode,
       },
     });
   } catch (err) {
@@ -109,6 +111,15 @@ exports.callTicket = async (req, res, next) => {
 
     if (ticket.assignedTeller?.toString() !== req.teller._id.toString()) {
       return res.status(403).json({ success: false, message: 'This ticket is not assigned to you.' });
+    }
+
+    const { verificationCode } = req.body;
+    if (!verificationCode) {
+      return res.status(400).json({ success: false, message: 'Verification code is required.' });
+    }
+
+    if (ticket.verificationCode !== verificationCode) {
+      return res.status(400).json({ success: false, message: 'Invalid verification code.' });
     }
 
     ticket.status = TICKET_STATUS.SERVING;

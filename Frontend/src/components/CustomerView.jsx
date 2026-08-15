@@ -424,6 +424,25 @@ export default function CustomerView() {
                 
                 <h4 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>{activeTicket.name}</h4>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>Purpose: {activeTicket.purpose}</p>
+
+                <div style={{
+                  marginTop: '16px',
+                  padding: '10px 14px',
+                  borderRadius: '12px',
+                  background: 'rgba(32, 84, 70, 0.04)',
+                  border: '1px dashed var(--color-accent)',
+                  display: 'inline-block'
+                }}>
+                  <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: '700', letterSpacing: '0.5px' }}>
+                    Verification PIN
+                  </span>
+                  <h4 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--color-accent)', margin: '4px 0 0 0', letterSpacing: '3px' }}>
+                    {activeTicket.verificationCode || '----'}
+                  </h4>
+                  <p style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', marginTop: '4px', fontStyle: 'italic' }}>
+                    Present this PIN to the teller to start service
+                  </p>
+                </div>
               </div>
 
               <div className="ticket-divider" />

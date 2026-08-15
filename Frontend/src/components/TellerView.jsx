@@ -37,6 +37,8 @@ export default function TellerView() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('terminal');
+  const [verifyTicketId, setVerifyTicketId] = useState(null);
+  const [verificationCode, setVerificationCode] = useState('');
 
   // Filter tellers from counters (excluding the manager TLR001)
   const tellersList = counters.filter(c => c.staffId !== 'TLR001');
@@ -103,11 +105,11 @@ export default function TellerView() {
     setLoading(false);
   };
 
-  const handleCall = async (ticketId) => {
+  const handleCall = async (ticketId, code) => {
     if (!currentCounter) return;
     setLoading(true);
     setError('');
-    const res = await callTicket(user.staffId, ticketId);
+    const res = await callTicket(user.staffId, ticketId, code);
     setLoading(false);
     if (res.success) {
       setNotes('');
@@ -466,19 +468,62 @@ export default function TellerView() {
                   Next customer in line: <strong>{waitingCustomers[0].ticketNumber}</strong> ({waitingCustomers[0].name}). Call them to your station to begin service.
                 </p>
 
-                <button
-                  onClick={() => handleCall(waitingCustomers[0].id)}
-                  disabled={loading || !currentCounter.isAvailable}
-                  className="glass-button primary animate-pulse-soft"
-                  style={{ width: '100%', height: '46px', borderRadius: '12px', fontSize: '0.95rem' }}
-                >
-                  <Play size={18} /> Call & Serve Next Guest
-                </button>
-                
-                {!currentCounter.isAvailable && (
-                  <p style={{ fontSize: '0.75rem', color: 'var(--color-highlight)', marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                    <AlertTriangle size={12} /> Make yourself "Available" above to call the next guest.
-                  </p>
+                {verifyTicketId === waitingCustomers[0].id ? (
+                  <div className="glass-panel" style={{ padding: '16px', background: 'rgba(32, 84, 70, 0.03)', borderRadius: '12px', marginTop: '12px', border: '1px dashed var(--color-accent)' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', marginBottom: '8px', color: 'var(--text-secondary)', textAlign: 'left' }}>
+                      Enter Customer Verification PIN (4 digits)
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={4}
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="e.g. 1234"
+                      className="glass-input"
+                      style={{ letterSpacing: '4px', textAlign: 'center', fontSize: '1.25rem', fontWeight: '800', height: '42px', marginBottom: '12px', background: 'var(--input-bg, rgba(255,255,255,0.05))' }}
+                    />
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button
+                        onClick={() => {
+                          setVerifyTicketId(null);
+                          setVerificationCode('');
+                        }}
+                        className="glass-button"
+                        style={{ flex: 1, height: '36px', borderRadius: '8px', fontSize: '0.85rem' }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleCall(waitingCustomers[0].id, verificationCode);
+                          setVerifyTicketId(null);
+                          setVerificationCode('');
+                        }}
+                        disabled={verificationCode.length !== 4}
+                        className="glass-button primary"
+                        style={{ flex: 1, height: '36px', borderRadius: '8px', fontSize: '0.85rem' }}
+                      >
+                        Verify & Serve
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setVerifyTicketId(waitingCustomers[0].id)}
+                      disabled={loading || !currentCounter.isAvailable}
+                      className="glass-button primary animate-pulse-soft"
+                      style={{ width: '100%', height: '46px', borderRadius: '12px', fontSize: '0.95rem' }}
+                    >
+                      <Play size={18} /> Call & Serve Next Guest
+                    </button>
+                    
+                    {!currentCounter.isAvailable && (
+                      <p style={{ fontSize: '0.75rem', color: 'var(--color-highlight)', marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                        <AlertTriangle size={12} /> Make yourself "Available" above to call the next guest.
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             ) : (
@@ -666,13 +711,51 @@ export default function TellerView() {
                               </p>
                             </div>
                             
-                            <button
-                              onClick={() => serveCustomer(counter.id, counter.customers[0].id)}
-                              className="glass-button primary"
-                              style={{ padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', height: '36px' }}
-                            >
-                              <Play size={14} /> Call & Serve
-                            </button>
+                            {verifyTicketId === counter.customers[0].id ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '150px' }}>
+                                <input
+                                  type="text"
+                                  maxLength={4}
+                                  value={verificationCode}
+                                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                                  placeholder="PIN"
+                                  className="glass-input"
+                                  style={{ textAlign: 'center', height: '32px', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '2px', background: 'var(--input-bg, rgba(255,255,255,0.05))' }}
+                                />
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                  <button
+                                    onClick={() => {
+                                      setVerifyTicketId(null);
+                                      setVerificationCode('');
+                                    }}
+                                    className="glass-button"
+                                    style={{ padding: '4px 8px', fontSize: '0.7rem', height: '26px', flex: 1 }}
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      serveCustomer(counter.id, counter.customers[0].id, verificationCode);
+                                      setVerifyTicketId(null);
+                                      setVerificationCode('');
+                                    }}
+                                    disabled={verificationCode.length !== 4}
+                                    className="glass-button primary"
+                                    style={{ padding: '4px 8px', fontSize: '0.7rem', height: '26px', flex: 1 }}
+                                  >
+                                    Verify
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setVerifyTicketId(counter.customers[0].id)}
+                                className="glass-button primary"
+                                style={{ padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', height: '36px' }}
+                              >
+                                <Play size={14} /> Call & Serve
+                              </button>
+                            )}
                           </div>
 
                           {counter.customers.length > 1 && (

@@ -389,6 +389,7 @@ export const AppProvider = ({ children }) => {
             bank: t.clientInfo?.accountNumber || 'GCB Bank',
             isVip: t.priority === 'priority',
             ticketNumber: t.ticketNumber,
+            verificationCode: t.verificationCode,
             status: localStatus,
             checkInTime: new Date(t.timing?.issuedAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             assignedCounterId: t.assignedTeller?._id || t.assignedTeller,
@@ -445,6 +446,7 @@ export const AppProvider = ({ children }) => {
           accountNumber: (user && user.accountNumber) ? user.accountNumber : 'N/A',
           isVip: customerData.isVip || false,
           ticketNumber: t.ticketNumber,
+          verificationCode: t.verificationCode,
           status: t.status === 'waiting' ? 'checked_in' : 'directed',
           checkInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           assignedCounterId: t.assignedWindow ? `counter-${t.assignedWindow}` : null,
@@ -488,7 +490,7 @@ export const AppProvider = ({ children }) => {
   };
 
   // 3. Manager/Teller Action: Serve / complete service
-  const serveCustomer = async (counterId, customerId) => {
+  const serveCustomer = async (counterId, customerId, verificationCode) => {
     try {
       const teller = counters.find(c => c.id === counterId);
       if (!teller) return;
@@ -498,7 +500,11 @@ export const AppProvider = ({ children }) => {
 
       const callRes = await fetch(`${API_BASE}/tickets/${customerId}/call`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${tellerToken}` }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tellerToken}` 
+        },
+        body: JSON.stringify({ verificationCode })
       });
       const callData = await callRes.json();
 
@@ -519,6 +525,8 @@ export const AppProvider = ({ children }) => {
             console.error('Failed to complete ticket:', e);
           }
         }, 1000);
+      } else {
+        alert(callData.message || 'Verification failed');
       }
     } catch (err) {
       console.error('Failed to serve customer:', err);
@@ -662,14 +670,18 @@ export const AppProvider = ({ children }) => {
   };
 
   // Teller specific action: Call ticket
-  const callTicket = async (staffId, ticketId) => {
+  const callTicket = async (staffId, ticketId, verificationCode) => {
     try {
       const token = await getAuthToken(staffId);
       if (!token) return { success: false, message: 'Authentication failed for teller.' };
 
       const res = await fetch(`${API_BASE}/tickets/${ticketId}/call`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ verificationCode })
       });
       const data = await res.json();
       if (data.success) {

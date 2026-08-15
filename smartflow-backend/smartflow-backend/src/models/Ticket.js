@@ -15,6 +15,9 @@ const ticketSchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    verificationCode: {
+      type: String,
+    },
     serviceType: {
       type: String,
       required: [true, 'Service type is required'],
@@ -69,7 +72,7 @@ const ticketSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Auto-generate ticket number before saving (e.g. GEN-0042, FX-0007)
+// Auto-generate ticket number and verification code before saving
 ticketSchema.pre('save', async function (next) {
   if (this.isNew) {
     const prefix = getPrefix(this.serviceType);
@@ -79,6 +82,7 @@ ticketSchema.pre('save', async function (next) {
       },
     });
     this.ticketNumber = `${prefix}-${String(count + 1).padStart(4, '0')}`;
+    this.verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
   }
   next();
 });
