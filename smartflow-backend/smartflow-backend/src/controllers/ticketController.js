@@ -109,17 +109,32 @@ exports.callTicket = async (req, res, next) => {
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found.' });
 
-    if (ticket.assignedTeller?.toString() !== req.teller._id.toString()) {
-      return res.status(403).json({ success: false, message: 'This ticket is not assigned to you.' });
-    }
-
     const { verificationCode } = req.body;
-    if (!verificationCode) {
-      return res.status(400).json({ success: false, message: 'Verification code is required.' });
+    const isManagerOrAdmin = req.teller.role === 'manager' || req.teller.role === 'admin';
+
+    // Verification code is required for tellers, but manager/admin can bypass it
+    if (!isManagerOrAdmin) {
+      if (!verificationCode) {
+        return res.status(400).json({ success: false, message: 'Verification code is required.' });
+      }
+
+      if (ticket.verificationCode !== verificationCode) {
+        return res.status(400).json({ success: false, message: 'Invalid verification code.' });
+      }
     }
 
-    if (ticket.verificationCode !== verificationCode) {
-      return res.status(400).json({ success: false, message: 'Invalid verification code.' });
+    // Self-assignment / queue-override check
+    // If ticket is not assigned to this teller (either waiting or assigned to someone else)
+    if (!ticket.assignedTeller || ticket.assignedTeller.toString() !== req.teller._id.toString()) {
+      // Record transfer if it was previously assigned to someone else
+      if (ticket.assignedTeller) {
+        ticket.transferHistory.push({
+          fromTeller: ticket.assignedTeller,
+          toTeller: req.teller._id,
+          reason: 'Customer-requested teller override (security authentication)',
+        });
+      }
+      ticket.assignedTeller = req.teller._id;
     }
 
     ticket.status = TICKET_STATUS.SERVING;

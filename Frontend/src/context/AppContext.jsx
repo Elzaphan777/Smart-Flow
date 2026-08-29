@@ -141,11 +141,7 @@ export const AppProvider = ({ children }) => {
     });
 
     socket.on('ticket_assigned', (data) => {
-      addNotification({
-        title: 'Queue Assigned',
-        message: `Ticket ${data.ticketNumber} directed to Station ${data.windowNumber}`,
-        type: 'assignment'
-      });
+      // Notification removed to prevent endless noise for admin (not a direct teller signal of readiness/served/leaving)
       
       // Update active ticket if it matches
       setActiveTicket(prev => {
@@ -176,11 +172,7 @@ export const AppProvider = ({ children }) => {
     });
 
     socket.on('ticket_waiting', (data) => {
-      addNotification({
-        title: 'Customer Entry',
-        message: `New customer entry in queue. Ticket: ${data.ticketNumber} for ${SERVICE_TO_PURPOSE[data.serviceType] || data.serviceType}`,
-        type: 'entry'
-      });
+      // Notification removed to prevent endless noise for admin (this is customer entry, not teller-initiated)
       refreshQueueAndSnapshot();
     });
 
@@ -195,6 +187,14 @@ export const AppProvider = ({ children }) => {
           title: 'Station Online',
           message: `Station ${data.windowNumber} is now online and available.`,
           type: 'station_free'
+        });
+      } else {
+        // Station offline or unavailable represents "leaving post"
+        const reason = !data.isOnline ? 'offline' : 'away (on break)';
+        addNotification({
+          title: 'Station Offline',
+          message: `Station ${data.windowNumber} is now ${reason}.`,
+          type: 'station_offline'
         });
       }
       refreshQueueAndSnapshot();

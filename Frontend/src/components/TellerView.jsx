@@ -28,8 +28,7 @@ export default function TellerView() {
     toggleCounterStatus,
     approveAndDirectTicket,
     checkIns,
-    signalTellerFreedom,
-    serveCustomer
+    signalTellerFreedom
   } = useApp();
 
   const [notes, setNotes] = useState('');
@@ -590,7 +589,7 @@ export default function TellerView() {
                   <div style={{ padding: '30px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
                     <p style={{ fontSize: '0.85rem', fontStyle: 'italic' }}>No unassigned lobby tickets available.</p>
                   </div>
-                ) : (
+                                ) : (
                   checkIns.filter(t => t.status === 'checked_in').map((t, idx, arr) => (
                     <div key={t.id} style={{
                       display: 'flex',
@@ -611,15 +610,63 @@ export default function TellerView() {
                         <p style={{ color: 'var(--text-primary)', marginTop: '4px', fontWeight: '600' }}>{t.name}</p>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '2px' }}>Check-in: {t.checkInTime} • Bank: {t.bank}</p>
                       </div>
-
-                      <button
-                        onClick={() => handleApproveAndDirect(t.id)}
-                        disabled={loading || !currentCounter.isAvailable || !currentCounter.isOpen}
-                        className="glass-button primary"
-                        style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', height: '32px' }}
-                      >
-                        Approve & Direct
-                      </button>
+                      
+                      {verifyTicketId === t.id ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '150px' }}>
+                          <input
+                            type="text"
+                            maxLength={4}
+                            value={verificationCode}
+                            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                            placeholder="PIN"
+                            className="glass-input"
+                            style={{ textAlign: 'center', height: '32px', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '2px', background: 'var(--input-bg, rgba(255,255,255,0.05))' }}
+                          />
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button
+                              onClick={() => {
+                                setVerifyTicketId(null);
+                                setVerificationCode('');
+                              }}
+                              className="glass-button"
+                              style={{ padding: '4px 8px', fontSize: '0.7rem', height: '26px', flex: 1 }}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleCall(t.id, verificationCode);
+                                setVerifyTicketId(null);
+                                setVerificationCode('');
+                              }}
+                              disabled={verificationCode.length !== 4}
+                              className="glass-button primary"
+                              style={{ padding: '4px 8px', fontSize: '0.7rem', height: '26px', flex: 1 }}
+                            >
+                              Verify
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => setVerifyTicketId(t.id)}
+                            disabled={loading || !currentCounter.isAvailable || !currentCounter.isOpen}
+                            className="glass-button primary"
+                            style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', height: '32px' }}
+                          >
+                            Verify & Serve
+                          </button>
+                          <button
+                            onClick={() => handleApproveAndDirect(t.id)}
+                            disabled={loading || !currentCounter.isAvailable || !currentCounter.isOpen}
+                            className="glass-button secondary"
+                            style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', height: '32px' }}
+                          >
+                            Approve & Direct
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -735,7 +782,7 @@ export default function TellerView() {
                                   </button>
                                   <button
                                     onClick={() => {
-                                      serveCustomer(counter.id, counter.customers[0].id, verificationCode);
+                                      handleCall(counter.customers[0].id, verificationCode);
                                       setVerifyTicketId(null);
                                       setVerificationCode('');
                                     }}
